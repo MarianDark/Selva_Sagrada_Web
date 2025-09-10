@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 
-const connect = require('./config/db');
+const connect = require('./src/config/db');
 
 const app = express();
 
@@ -32,13 +32,13 @@ app.use(morgan('dev'));
 
 /* Rutas */
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/availability', require('./routes/availability.routes'));
-app.use('/api/bookings', require('./routes/bookings.routes'));
-app.use('/api/contact', require('./routes/contact.routes'));
+app.use('/api/auth', require('./src/routes/auth.routes'));
+app.use('/api/availability', require('./src/routes/availability.routes'));
+app.use('/api/bookings', require('./src/routes/bookings.routes'));
+app.use('/api/contact', require('./src/routes/contact.routes'));
 
 /* Error handler */
-app.use(require('./middleware/error'));
+app.use(require('./src/middleware/error'));
 
 /* Arranque */
 const PORT = process.env.PORT || 3000;
