@@ -6,6 +6,9 @@ const User = require('../models/User');            // <- minúsculas
 const EmailToken = require('../models/EmailToken'); // <- minúsculas
 const { transporter } = require('../config/mailer');
 
+
+const isProd = process.env.NODE_ENV === 'production';
+
 // Reglas de validación para registro
 const rulesRegister = [
   body('name').isLength({ min: 2 }).trim(),
@@ -21,6 +24,7 @@ const rulesRegister = [
 // -------------------- REGISTER --------------------
 exports.register = [
   ...rulesRegister,
+  validate, // valida ANTES del handler
   async (req, res, next) => {
     try {
       const { name, email, password } = req.body;
@@ -51,17 +55,32 @@ exports.register = [
   },
 ];
 
-// -------------------- VERIFY EMAIL --------------------
+// -------------------- VERIFY EMAIL (GET o POST) --------------------
 exports.verifyEmail = async (req, res, next) => {
   try {
-    const { token } = req.body;
+    const token = req.body?.token ?? req.query?.token;
+    if (!token) {
+      if (req.method === 'GET') {
+        return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=missing`);
+      }
+      return res.status(400).json({ message: 'Token requerido' });
+    }
+
     const rec = await EmailToken.findOne({ token, type: 'verify' });
     if (!rec || rec.expiresAt < new Date()) {
+      if (req.method === 'GET') {
+        return res.redirect(`${process.env.CLIENT_URL}/verify-email?status=invalid`);
+      }
       return res.status(400).json({ message: 'Token inválido' });
     }
+
     await User.findByIdAndUpdate(rec.userId, { isEmailVerified: true });
     await rec.deleteOne();
-    res.json({ message: 'Email verificado' });
+
+    if (req.method === 'GET') {
+      return res.redirect(`${process.env.CLIENT_URL}/login?verified=1`);
+    }
+    return res.json({ message: 'Email verificado' });
   } catch (e) { next(e); }
 };
 
@@ -85,11 +104,10 @@ exports.login = async (req, res, next) => {
       { expiresIn: '7d' }
     );
 
-    // IMPORTANTE para SPA en dominio distinto
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,          // requiere HTTPS
-      sameSite: 'none',      // permite cross-site
+      secure: isProd,                     // https solo en prod
+      sameSite: isProd ? 'none' : 'lax',  // cross-site en prod; first-party en dev
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -102,7 +120,11 @@ exports.login = async (req, res, next) => {
 
 // -------------------- LOGOUT --------------------
 exports.logout = (req, res) => {
-  res.clearCookie('token', { httpOnly: true, secure: true, sameSite: 'none' });
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+  });
   res.json({ message: 'Logout' });
 };
 
@@ -165,6 +187,7 @@ const passwordRules = [
 
 exports.resetPassword = [
   ...passwordRules,
+  validate, // valida ANTES del handler
   async (req, res, next) => {
     try {
       const { token, password } = req.body;
