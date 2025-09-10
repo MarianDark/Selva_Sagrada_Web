@@ -1,20 +1,15 @@
-const router = require('express').Router()
-const validate = require('../middleware/validate')
-const captcha = require('../middleware/captcha')
-const auth = require('../middleware/auth')
-const C = require('../controllers/auth.controller')
+const router = require('express').Router();
+const validate = require('../middleware/validate');
+const captcha = require('../middleware/captcha');
+const auth = require('../middleware/auth');
+const C = require('../controllers/auth.controller');
 
-// Registro / verificación / login / logout
-router.post('/register', C.register, validate)
-router.post('/verify-email', C.verifyEmail)
-router.post('/login', captcha, C.login)
-router.post('/logout', C.logout)
+router.post('/register', validate, C.register);
+router.post('/verify-email', C.verifyEmail);
+router.post('/login', captcha, C.login);
+router.post('/logout', C.logout);
+router.get('/me', auth(), C.me);
+router.post('/forgot-password', captcha, C.forgotPassword);
+router.post('/reset-password', validate, C.resetPassword);
 
-// Usuario actual
-router.get('/me', auth(), C.me)
-
-// Recuperación de contraseña
-router.post('/forgot-password', captcha, C.forgotPassword) // envía email con token
-router.post('/reset-password', C.resetPassword, validate) // aplica nueva contraseña
-
-module.exports = router
+module.exports = router;
