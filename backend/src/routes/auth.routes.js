@@ -5,8 +5,8 @@ const C = require('../controllers/auth.controller');
 
 // Registro / verificación / login / logout
 router.post('/register', C.register);
-router.get('/verify-email', C.verifyEmail);    // <-- NUEVO (GET con token en query)
-router.post('/verify-email', C.verifyEmail);   // <-- mantiene el POST existente
+router.get('/verify-email', C.verifyEmail);    // GET con token en query
+router.post('/verify-email', C.verifyEmail);   // POST con token en body
 router.post('/login', captcha, C.login);
 router.post('/logout', C.logout);
 

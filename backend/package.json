@@ -1,8 +1,11 @@
 {
   "name": "backend",
-"version": "1.0.0",
+  "version": "1.0.0",
   "main": "server.js",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js"
@@ -17,12 +20,10 @@
     "express-rate-limit": "^8.0.1",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
-    "ics": "^3.8.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "morgan": "^1.10.1",
-    "nodemailer": "^7.0.6",
-    "pino": "^9.9.1"
+    "nodemailer": "^7.0.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

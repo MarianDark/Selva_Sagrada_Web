@@ -5,36 +5,30 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
-
 const connect = require('./src/config/db');
 
 const app = express();
 const isProd = process.env.NODE_ENV === 'production';
 
 /* Seguridad y middlewares */
-app.set('trust proxy', 1); // necesario en Render para cookies tras proxy
+app.set('trust proxy', 1); // necesario en Render / proxies para cookies
 app.use(helmet());
 
-// Orígenes permitidos:
-// - CLIENT_URL (uno)
-// - CLIENT_URLS (lista separada por comas)
-// - localhost:5173 en desarrollo
+/** Orígenes permitidos */
 const ORIGINS = Array.from(new Set(
   [
     process.env.CLIENT_URL,
     ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
     !isProd && 'http://localhost:5173',
-  ]
-    .filter(Boolean)
-    .map(s => s.trim())
+  ].filter(Boolean).map(s => s.trim())
 ));
 
-// CORS con chequeo dinámico y preflight completo
 const corsOptions = {
   origin(origin, cb) {
-    if (!origin) return cb(null, true);                 // permite curl / healthchecks
+    // Permite healthchecks y curl (sin origen)
+    if (!origin) return cb(null, true);
     const ok = ORIGINS.includes(origin);
-    return cb(null, ok);
+    return cb(ok ? null : new Error('Not allowed by CORS'), ok);
   },
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
@@ -43,7 +37,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // respuesta a preflight
 
 app.use(express.json());
 app.use(cookieParser());
@@ -59,16 +52,17 @@ if (!isProd) {
   console.log('CORS ORIGINS →', ORIGINS);
 }
 
-/* Rutas */
+/* Rutas básicas */
 app.get('/', (_, res) => res.json({ name: 'Selva Sagrada API', status: 'ok' }));
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
+/* Rutas API */
 app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/availability', require('./src/routes/availability.routes'));
-app.use('/api/bookings', require('./src/routes/bookings.routes'));
+app.use('/api/booking', require('./src/routes/booking.routes'));
 app.use('/api/contact', require('./src/routes/contact.routes'));
 
-// 404 para rutas /api desconocidas
+/* 404 para rutas /api desconocidas */
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ message: 'Not Found' });
@@ -79,8 +73,9 @@ app.use((req, res, next) => {
 /* Error handler */
 app.use(require('./src/middleware/error'));
 
-/* Arranque */
 const PORT = process.env.PORT || 3000;
+
+/* Arranque */
 connect()
   .then(() => app.listen(PORT, () => console.log(`API listening on :${PORT}`)))
   .catch((err) => {

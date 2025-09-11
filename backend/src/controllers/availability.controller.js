@@ -1,4 +1,4 @@
-const availability = require('../models/availability'); // <- minúsculas
+const Availability = require('../models/Availability');
 
 exports.getAvailability = async (req, res, next) => {
   try {
@@ -15,14 +15,16 @@ exports.getAvailability = async (req, res, next) => {
 exports.setAvailability = async (req, res, next) => {
   try {
     const { date, slots } = req.body;
-    if (!date || !slots) return res.status(400).json({ message: 'Faltan campos obligatorios' });
+    if (!date || !Array.isArray(slots)) {
+      return res.status(400).json({ message: 'Faltan campos obligatorios' });
+    }
 
     const d = new Date(date); d.setHours(0,0,0,0);
 
     const doc = await Availability.findOneAndUpdate(
       { date: d },
       { date: d, slots },
-      { upsert: true, new: true }
+      { upsert: true, new: true, runValidators: true }
     );
     res.status(201).json(doc);
   } catch (e) { next(e); }
