@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 const { body } = require('express-validator');
 const crypto = require('crypto');
 const validate = require('../middleware/validate');
-const User = require('../models/User');            // <- minúsculas
-const EmailToken = require('../models/EmailToken'); // <- minúsculas
+const User = require('../models/user');            // <- minúsculas
+const EmailToken = require('../models/emailtoken'); // <- minúsculas
 const { transporter } = require('../config/mailer');
 
 

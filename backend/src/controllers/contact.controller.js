@@ -1,4 +1,4 @@
-const Contact = require('../models/ContactMessage')
+const Contact = require('../models/contactmessage')
 const { transporter } = require('../config/mailer')
 
 // Crear un nuevo mensaje de contacto

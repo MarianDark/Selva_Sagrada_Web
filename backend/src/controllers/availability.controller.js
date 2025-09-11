@@ -1,4 +1,4 @@
-const Availability = require('../models/Availability'); // <- minúsculas
+const availability = require('../models/availability'); // <- minúsculas
 
 exports.getAvailability = async (req, res, next) => {
   try {

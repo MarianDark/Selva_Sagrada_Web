@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
 const captcha = require('../middleware/captcha');
-const C = require('../controllers/booking.controller');
+const C = require('../controllers/booking.controller'); // <- minúsculas
 
 // Crear reserva (público con captcha; si hay sesión se guarda userId)
 router.post('/', captcha, C.create);
