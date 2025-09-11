@@ -1,18 +1,15 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
 const captcha = require('../middleware/captcha');
-const C = require('../controllers/bookings.controller');
+const C = require('../controllers/booking.controller');
 
-// Crear reserva (usuario logueado + captcha)
-router.post('/', auth(), captcha, C.create);
+// Crear reserva (público con captcha; si hay sesión se guarda userId)
+router.post('/', captcha, C.create);
 
-// Mis reservas
-router.get('/mine', auth(), C.mine);
+// Mis reservas (requiere login)
+router.get('/me', auth(), C.mine);
 
-// Listado completo (admin)
+// Todas las reservas (admin)
 router.get('/', auth('admin'), C.all);
-
-// Cancelar
-router.delete('/:id', auth(), C.cancel);
 
 module.exports = router;
