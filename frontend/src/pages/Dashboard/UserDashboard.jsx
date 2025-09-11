@@ -3,7 +3,7 @@ import { api } from '../../lib/api'
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null)
-  const [bookings, setBookings] = useState([])
+  const [booking, setBooking] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -14,8 +14,8 @@ export default function UserDashboard() {
         if (meRes) setUser(meRes.data)
 
         // 2) Mis reservas
-        const resBookings = await api.get('/bookings/me')
-        setBookings(resBookings.data)
+        const resBooking = await api.get('/booking/me')
+        setBooking(resBooking.data)
       } catch (e) {
         console.error('Error cargando dashboard', e)
       } finally {
@@ -43,7 +43,7 @@ export default function UserDashboard() {
       {/* Reservas */}
       <section>
         <h2 className="text-xl font-medium mb-3">Mis reservas</h2>
-        {bookings.length === 0 ? (
+        {booking.length === 0 ? (
           <p className="text-sm text-zinc-500">Aún no tienes reservas.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -57,7 +57,7 @@ export default function UserDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((b) => (
+                {booking.map((b) => (
                   <tr key={b._id} className="border-t">
                     <td className="px-3 py-2">{b.service}</td>
                     <td className="px-3 py-2">

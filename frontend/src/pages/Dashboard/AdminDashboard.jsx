@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react'
 import { api } from '../../lib/api';
 
 export default function AdminDashboard() {
-  const [bookings, setBookings] = useState([])
+  const [booking, setBooking] = useState([])
   const [contacts, setContacts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resBookings, resContacts] = await Promise.all([
-          api.get('/bookings'),
+        const [resBooking, resContacts] = await Promise.all([
+          api.get('/booking'),
           api.get('/contact'), // este endpoint debe crearse para listar mensajes si no existe
         ])
-        setBookings(resBookings.data)
+        setBooking(resBooking.data)
         setContacts(resContacts.data)
       } catch (e) {
         console.error('Error cargando datos admin', e)
@@ -33,7 +33,7 @@ export default function AdminDashboard() {
       {/* Reservas */}
       <section>
         <h2 className="text-xl font-medium mb-3">Reservas</h2>
-        {bookings.length === 0 ? (
+        {booking.length === 0 ? (
           <p className="text-sm text-zinc-500">No hay reservas aún.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((b) => (
+                {booking.map((b) => (
                   <tr key={b._id} className="border-t">
                     <td className="px-3 py-2">{b.name} ({b.email})</td>
                     <td className="px-3 py-2">{b.service}</td>
