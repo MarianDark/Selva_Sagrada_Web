@@ -27,7 +27,7 @@ const name = prompt('Tu nombre para la reserva:')
 const email = prompt('Tu email:')
 if (!name || !email) return
 try {
-const { data } = await api.post('/bookings', {
+const { data } = await api.post('/booking', {
 name, email, service:'Sesión Holística', start: info.startStr, end: info.endStr,
 captchaToken: window.grecaptcha ? await window.grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY, { action:'book' }) : undefined
 })
