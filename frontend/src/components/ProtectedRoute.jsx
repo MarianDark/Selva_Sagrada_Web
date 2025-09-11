@@ -6,7 +6,7 @@ export default function ProtectedRoute({ children, role }) {
 
   useEffect(() => {
     // Minimal: comprobar si cookie/JWT válido y rol (si se requiere)
-    api.get('/api/health')
+    api.get('/health')
       .then(() => setAllowed(true)) // en tu app real consulta /me
       .catch(() => setAllowed(false))
   }, [])

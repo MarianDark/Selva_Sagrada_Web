@@ -14,7 +14,7 @@ export default function VerifyEmail() {
       setStatus('error')
       return
     }
-    api.post('/api/auth/verify-email', { token })
+    api.post('/auth/verify-email', { token })
       .then(() => {
         setMsg('¡Email verificado! Redirigiendo al login...')
         setStatus('success')

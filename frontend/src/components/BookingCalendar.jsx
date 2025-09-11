@@ -13,7 +13,7 @@ const [events, setEvents] = useState([])
 useEffect(()=>{ // cargar disponibilidad como eventos libres
 const from = new Date();
 const to = new Date(); to.setMonth(to.getMonth()+2)
-api.get('/api/availability', { params:{ from, to } }).then(({data})=>{
+api.get('/availability', { params:{ from, to } }).then(({data})=>{
 const ev = data.flatMap(d => d.slots.map(s => ({
 start: s.start, end: s.end, display: 'background'
 })))
@@ -27,7 +27,7 @@ const name = prompt('Tu nombre para la reserva:')
 const email = prompt('Tu email:')
 if (!name || !email) return
 try {
-const { data } = await api.post('/api/bookings', {
+const { data } = await api.post('/bookings', {
 name, email, service:'Sesión Holística', start: info.startStr, end: info.endStr,
 captchaToken: window.grecaptcha ? await window.grecaptcha.execute(import.meta.env.VITE_RECAPTCHA_SITE_KEY, { action:'book' }) : undefined
 })

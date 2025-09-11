@@ -25,7 +25,7 @@ try {
 setSending(true)
 const captchaToken = await captchaRef.current.executeAsync()
 captchaRef.current.reset()
-await api.post('/api/contact', { ...data, captchaToken })
+await api.post('/contact', { ...data, captchaToken })
 setOk('¡Gracias! Te responderemos pronto.')
 reset()
 } catch (e) {

@@ -23,7 +23,7 @@ export default function ForgotPassword() {
       setError('')
       // Ejecuta reCAPTCHA invisible y obtiene el token
       const captchaToken = await captchaRef.current.execute('forgot_password')
-      await api.post('/api/auth/forgot-password', { email, captchaToken })
+      await api.post('/auth/forgot-password', { email, captchaToken })
       setOk('Si el email existe, enviaremos instrucciones para restablecer tu contraseña.')
     } catch (e) {
       setError(e?.response?.data?.message || 'No se pudo procesar la solicitud')

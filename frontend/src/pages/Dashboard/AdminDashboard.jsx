@@ -10,8 +10,8 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       try {
         const [resBookings, resContacts] = await Promise.all([
-          api.get('/api/bookings'),
-          api.get('/api/contact'), // este endpoint debe crearse para listar mensajes si no existe
+          api.get('/bookings'),
+          api.get('/contact'), // este endpoint debe crearse para listar mensajes si no existe
         ])
         setBookings(resBookings.data)
         setContacts(resContacts.data)

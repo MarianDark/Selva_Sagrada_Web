@@ -10,11 +10,11 @@ export default function UserDashboard() {
     const fetchData = async () => {
       try {
         // 1) Info del usuario (se devuelve en login o puedes hacer un endpoint /me)
-        const meRes = await api.get('/api/auth/me').catch(() => null)
+        const meRes = await api.get('/auth/me').catch(() => null)
         if (meRes) setUser(meRes.data)
 
         // 2) Mis reservas
-        const resBookings = await api.get('/api/bookings/me')
+        const resBookings = await api.get('/bookings/me')
         setBookings(resBookings.data)
       } catch (e) {
         console.error('Error cargando dashboard', e)

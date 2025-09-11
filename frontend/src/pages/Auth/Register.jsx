@@ -35,7 +35,7 @@ export default function Register() {
     try {
       setOk('')
       setError('')
-      await api.post('/api/auth/register', {
+      await api.post('/auth/register', {
         name: values.name,
         email: values.email,
         password: values.password,
