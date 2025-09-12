@@ -4,32 +4,43 @@ import { api } from '../../lib/api'
 export default function UserDashboard() {
   const [user, setUser] = useState(null)
   const [booking, setBooking] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [state, setState] = useState({ loading: true, error: '' })
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1) Info del usuario (se devuelve en login o puedes hacer un endpoint /me)
-        const meRes = await api.get('/auth/me').catch(() => null)
-        if (meRes) setUser(meRes.data)
+        // Datos del usuario
+        const meRes = await api.get('/auth/me')
+        setUser(meRes.data)
 
-        // 2) Mis reservas
+        // Reservas
         const resBooking = await api.get('/booking/me')
         setBooking(resBooking.data)
+
+        setState({ loading: false, error: '' })
       } catch (e) {
         console.error('Error cargando dashboard', e)
-      } finally {
-        setLoading(false)
+        const msg = e?.response?.data?.message || 'No se pudo cargar tu panel'
+        setState({ loading: false, error: msg })
       }
     }
     fetchData()
   }, [])
 
-  if (loading) return <p className="p-6">Cargando tu panel...</p>
+  if (state.loading) return <p className="p-6">Cargando tu panel...</p>
+
+  if (state.error) {
+    return (
+      <div className="p-6">
+        <p className="text-red-600">{state.error}</p>
+        <a href="/login" className="text-blue-600 underline">Inicia sesión</a>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-10">
-      <h1 className="text-2xl font-semibold">Mi Panel</h1>
+      <h1 className="text-2xl font-semibold">Mi cuenta</h1>
 
       {/* Info de usuario */}
       {user && (
@@ -61,10 +72,18 @@ export default function UserDashboard() {
                   <tr key={b._id} className="border-t">
                     <td className="px-3 py-2">{b.service}</td>
                     <td className="px-3 py-2">
-                      {new Date(b.start).toLocaleString()}
+                      {new Date(b.start).toLocaleString('es-ES', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                        timeZone: 'Europe/Madrid',
+                      })}
                     </td>
                     <td className="px-3 py-2">
-                      {new Date(b.end).toLocaleString()}
+                      {new Date(b.end).toLocaleString('es-ES', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                        timeZone: 'Europe/Madrid',
+                      })}
                     </td>
                     <td className="px-3 py-2 capitalize">{b.status}</td>
                   </tr>

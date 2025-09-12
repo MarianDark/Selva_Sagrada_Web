@@ -9,20 +9,32 @@ const baseURL = provided ? `${provided}/api` : "/api";
 
 const api = axios.create({
   baseURL,
-  withCredentials: true,
+  withCredentials: true, // ⬅️ cookies JWT
   headers: { "Content-Type": "application/json" },
 });
 
-// Log + normalizar error (evita 'Uncaught (in promise) null')
+// Interceptores de respuesta
 api.interceptors.response.use(
   (res) => res,
   (err) => {
+    const status = err.response?.status;
+
+    // Log de error detallado
     console.error("API error:", {
       method: err.config?.method,
       url: err.config?.url,
-      status: err.response?.status,
+      status,
       data: err.response?.data,
     });
+
+    // Manejo centralizado de 401 → redirigir a login
+    if (status === 401) {
+      const current = window.location.pathname;
+      if (!current.startsWith("/login")) {
+        window.location.href = `/login?next=${encodeURIComponent(current)}`;
+      }
+    }
+
     return Promise.reject(err);
   }
 );
