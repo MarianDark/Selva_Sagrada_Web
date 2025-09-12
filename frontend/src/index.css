@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* Fuentes (cárgalas en index.html) */
+:root {
+--bg-grad: linear-gradient(180deg, #0f2f1f 0%, #3a6f45 40%, #c4852a 140%);
+}
+
+
+html, body, #root { height: 100%; }
+body { @apply bg-white text-zinc-800 font-body; }
+
+
+/* Tarjetas suaves */
+.card { @apply bg-white/80 backdrop-blur border border-zinc-200 rounded-2xl shadow-soft; }
+.btn-primary { @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-jungle-600 text-white hover:bg-jungle-700 transition; }
+.btn-ghost { @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-white/10 text-white hover:bg-white/20 transition; }
+
+
+/* ====== FullCalendar tuning para look elegante/usable ====== */
+.fc { @apply rounded-2xl border bg-white/80 backdrop-blur; }
+.fc .fc-toolbar-title { @apply font-semibold text-jungle-800; }
+.fc .fc-button { @apply !bg-jungle-600 !border-jungle-600 hover:!bg-jungle-700 hover:!border-jungle-700 !rounded-lg !text-white; }
+.fc .fc-col-header-cell-cushion { @apply text-jungle-700; }
+.fc .fc-timegrid-slot { @apply bg-white; }
+.fc .fc-timegrid-slot-label { @apply text-xs text-zinc-500; }
+.fc .fc-timegrid-now-indicator-line { @apply !border-earth-500; }
+.fc .fc-bg-event { @apply bg-jungle-200/40 !border-0; }
+.fc .fc-highlight { @apply bg-earth-200/60; }
+
+
+/* Accesibilidad foco */
+:focus-visible { @apply outline-none ring-2 ring-jungle-500 ring-offset-2; }

@@ -1,10 +1,10 @@
 import ContactFooterForm from './ContactFooterForm'
 export default function Footer(){
 return (
-<footer id="contacto" className="bg-zinc-50 border-t mt-16">
+<footer id="contacto" className="bg-white/70 backdrop-blur border-t mt-16">
 <div className="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-8">
 <div>
-<h3 className="text-lg font-semibold mb-2">Selva Sagrada</h3>
+<h3 className="text-lg font-semibold mb-2 font-display text-jungle-800">Selva Sagrada</h3>
 <p className="text-sm text-zinc-600">Terapias holísticas, bienestar y retiros.</p>
 </div>
 <div>
