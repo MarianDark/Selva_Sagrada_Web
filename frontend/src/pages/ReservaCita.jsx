@@ -1,4 +1,4 @@
-import BookingCalendar from '../../components/BookingCalendar'
+import BookingCalendar from '../components/BookingCalendar'
 export default function ReservaCita(){
 return (
 <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
