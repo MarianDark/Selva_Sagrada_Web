@@ -10,22 +10,30 @@ const connect = require('./src/config/db');
 const app = express();
 const isProd = process.env.NODE_ENV === 'production';
 
-/* Seguridad y middlewares */
-app.set('trust proxy', 1); // necesario en Render / proxies para cookies
-app.use(helmet());
+/* Seguridad base y ajustes para proxies (Render/NGINX) */
+app.set('trust proxy', 1);                  // necesario para cookies Secure/SameSite detrás de proxy
+app.disable('x-powered-by');
 
-/** Orígenes permitidos */
+/* Helmet (una sola vez, con opciones adecuadas para cookies cross-site) */
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // sirve si tienes assets desde otro origen
+}));
+
+/** Orígenes permitidos (CORS) */
 const ORIGINS = Array.from(new Set(
   [
     process.env.CLIENT_URL,
     ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
     !isProd && 'http://localhost:5173',
-  ].filter(Boolean).map(s => s.trim())
+  ]
+  .filter(Boolean)
+  .map(s => s.trim())
 ));
 
 const corsOptions = {
   origin(origin, cb) {
-    // Permite healthchecks y curl (sin origen)
+    // Permite healthchecks y curl (sin origin)
     if (!origin) return cb(null, true);
     const ok = ORIGINS.includes(origin);
     return cb(ok ? null : new Error('Not allowed by CORS'), ok);
@@ -38,14 +46,28 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use(express.json());
+/* Parsers */
+app.use(express.json({ limit: '1mb' }));   // evita payloads enormes
 app.use(cookieParser());
+
+/* Rate limit global */
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
 }));
+
+/* Rate limits específicos (antes de montar rutas) */
+const tightLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
+const contactLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
+const bookingLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false });
+
+app.use('/api/auth/login', tightLimiter);
+app.use('/api/auth/register', tightLimiter);
+app.use('/api/auth/forgot-password', tightLimiter);
+app.use('/api/contact', contactLimiter);
+app.use('/api/booking', bookingLimiter);
 
 if (!isProd) {
   app.use(morgan('dev'));
