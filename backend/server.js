@@ -20,8 +20,8 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // sirve si tienes assets desde otro origen
 }));
 
-/** Orígenes permitidos (CORS) */
-const ORIGINS = Array.from(new Set(
+/** Orígenes permitidos (CORS) — permite exactos y subdominios */
+const RAW_ORIGINS = Array.from(new Set(
   [
     process.env.CLIENT_URL,
     ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
@@ -31,11 +31,21 @@ const ORIGINS = Array.from(new Set(
   .map(s => s.trim())
 ));
 
+const ALLOWED_HOSTS = RAW_ORIGINS
+  .map(u => { try { return new URL(u).hostname; } catch { return null; } })
+  .filter(Boolean);
+
 const corsOptions = {
   origin(origin, cb) {
-    // Permite healthchecks y curl (sin origin)
+    // Permite healthchecks y curl (sin Origin)
     if (!origin) return cb(null, true);
-    const ok = ORIGINS.includes(origin);
+    let hostname;
+    try {
+      hostname = new URL(origin).hostname;
+    } catch {
+      return cb(new Error('Bad origin'), false);
+    }
+    const ok = ALLOWED_HOSTS.some(h => hostname === h || hostname.endsWith(`.${h}`));
     return cb(ok ? null : new Error('Not allowed by CORS'), ok);
   },
   credentials: true,
@@ -71,7 +81,8 @@ app.use('/api/booking', bookingLimiter);
 
 if (!isProd) {
   app.use(morgan('dev'));
-  console.log('CORS ORIGINS →', ORIGINS);
+  console.log('CORS RAW_ORIGINS →', RAW_ORIGINS);
+  console.log('CORS ALLOWED_HOSTS →', ALLOWED_HOSTS);
 }
 
 /* Rutas básicas */
