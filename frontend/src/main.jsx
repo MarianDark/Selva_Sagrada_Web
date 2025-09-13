@@ -4,21 +4,32 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-
-if (import.meta.env.MODE !== 'production') {
-window.addEventListener('unhandledrejection', (e) => {
-console.error('[UNHANDLED REJECTION]', e.reason)
-})
-window.addEventListener('error', (e) => {
-console.error('[GLOBAL ERROR]', e.message, e.error)
-})
+// Handlers globales de errores (solo en desarrollo)
+if (import.meta.env.DEV) {
+  window.addEventListener('unhandledrejection', (e) => {
+    console.groupCollapsed('[UNHANDLED REJECTION]')
+    console.error(e?.reason || e)
+    console.groupEnd()
+  })
+  window.addEventListener('error', (e) => {
+    console.groupCollapsed('[GLOBAL ERROR]')
+    console.error(e?.message, e?.error || e)
+    console.groupEnd()
+  })
 }
 
+// Asegura que exista el contenedor root
+let rootEl = document.getElementById('root')
+if (!rootEl) {
+  rootEl = document.createElement('div')
+  rootEl.id = 'root'
+  document.body.appendChild(rootEl)
+}
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-<React.StrictMode>
-<BrowserRouter>
-<App />
-</BrowserRouter>
-</React.StrictMode>
+ReactDOM.createRoot(rootEl).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
 )
