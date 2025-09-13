@@ -1,8 +1,9 @@
+// src/layouts/RootLayout.jsx
 import { Outlet } from 'react-router-dom'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import AddToHomeBanner from '@/components/AddToHomeBanner'
-import ErrorBoundary from '@/components/ErrorBoundary'
+import Header from '../layouts/Header.jsx'
+import Footer from '../layouts/Footer.jsx'
+import AddToHomeBanner from '../components/AddToHomeBanner.jsx'
+import ErrorBoundary from '../components/ErrorBoundary.jsx'
 
 export default function RootLayout() {
   return (
@@ -11,7 +12,7 @@ export default function RootLayout() {
         {/* Header global */}
         <Header />
 
-        {/* Contenido dinámico de las rutas */}
+        {/* Contenido dinámico */}
         <main id="main-content" className="flex-1">
           <Outlet />
         </main>
@@ -19,7 +20,7 @@ export default function RootLayout() {
         {/* Footer global */}
         <Footer />
 
-        {/* Banner “Añadir a pantalla de inicio” (PWA) */}
+        {/* Banner PWA */}
         <AddToHomeBanner />
       </div>
     </ErrorBoundary>
