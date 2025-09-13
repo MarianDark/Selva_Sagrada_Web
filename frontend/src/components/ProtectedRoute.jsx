@@ -1,13 +1,24 @@
-import { useEffect, useState } from 'react'
-import { api } from '../lib/api'
-
+// src/components/ProtectedRoute.jsx
+import { useAuth } from '../context/AuthContext'
 
 export default function ProtectedRoute({ children, role }) {
-const [allowed, setAllowed] = useState(null)
-useEffect(() => {
-api.get('/health').then(() => setAllowed(true)).catch(() => setAllowed(false))
-}, [])
-if (allowed === null) return <div className="p-6">Cargando...</div>
-if (!allowed) { window.location.href = '/login'; return null }
-return children
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>
+  }
+
+  if (!user) {
+    // 🚫 No hay sesión -> redirige a login
+    window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`
+    return null
+  }
+
+  if (role && user.role !== role) {
+    // 🚫 Tiene sesión, pero rol insuficiente
+    return <div className="p-6 text-red-600">Acceso denegado.</div>
+  }
+
+  // ✅ Usuario permitido
+  return children
 }
