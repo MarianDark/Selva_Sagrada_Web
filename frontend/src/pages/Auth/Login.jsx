@@ -1,8 +1,8 @@
-// src/pages/Auth/Login.jsx
 import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import ReCAPTCHA from 'react-google-recaptcha'
 import api from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 
 export default function Login() {
   const { register, handleSubmit } = useForm()
@@ -10,6 +10,8 @@ export default function Login() {
   const [error, setError] = useState('')
   const [captchaToken, setCaptchaToken] = useState(null)
   const captchaRef = useRef(null)
+
+  const { loginSuccess } = useAuth() // 👈 traemos el helper
 
   const onSubmit = async (form) => {
     setError('')
@@ -20,12 +22,17 @@ export default function Login() {
         return
       }
 
+      // 👉 login en backend
       await api.post('/auth/login', { ...form, captchaToken })
 
-      // reset opcional
+      // 👉 refresca el user en el AuthContext
+      await loginSuccess()
+
+      // reset opcional del captcha
       try { captchaRef.current?.reset() } catch {}
       setCaptchaToken(null)
 
+      // redirige a dashboard del usuario
       window.location.assign('/mi-cuenta')
     } catch (e) {
       const msg = e?.response?.data?.message || e?.message || 'Error iniciando sesión'
@@ -40,8 +47,17 @@ export default function Login() {
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-md mx-auto p-6 space-y-3">
       <h1 className="text-xl font-semibold">Inicia sesión</h1>
 
-      <input {...register('email', { required: true })} placeholder="Email" className="w-full rounded-md border p-2" />
-      <input type="password" {...register('password', { required: true })} placeholder="Contraseña" className="w-full rounded-md border p-2" />
+      <input
+        {...register('email', { required: true })}
+        placeholder="Email"
+        className="w-full rounded-md border p-2"
+      />
+      <input
+        type="password"
+        {...register('password', { required: true })}
+        placeholder="Contraseña"
+        className="w-full rounded-md border p-2"
+      />
 
       <ReCAPTCHA
         ref={captchaRef}
@@ -51,7 +67,10 @@ export default function Login() {
 
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      <button disabled={submitting} className="w-full bg-black text-white rounded-md py-2 disabled:opacity-60">
+      <button
+        disabled={submitting}
+        className="w-full bg-black text-white rounded-md py-2 disabled:opacity-60"
+      >
         {submitting ? 'Entrando…' : 'Entrar'}
       </button>
     </form>
