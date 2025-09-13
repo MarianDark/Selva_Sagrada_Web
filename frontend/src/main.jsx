@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
+// 👉 Registro del Service Worker de PWA
+import { registerSW } from 'virtual:pwa-register'
+
 // Handlers globales de errores (solo en desarrollo)
 if (import.meta.env.DEV) {
   window.addEventListener('unhandledrejection', (e) => {
@@ -26,6 +29,7 @@ if (!rootEl) {
   document.body.appendChild(rootEl)
 }
 
+// Inicializa React
 ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -33,3 +37,15 @@ ReactDOM.createRoot(rootEl).render(
     </BrowserRouter>
   </React.StrictMode>
 )
+
+// 🚀 Inicializa el Service Worker (PWA)
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm('Nueva versión disponible. ¿Actualizar ahora?')) {
+      updateSW(true)
+    }
+  },
+  onOfflineReady() {
+    console.log('✅ App lista para usarse offline 🚀')
+  }
+})

@@ -1,4 +1,4 @@
-import ContactFooterForm from './ContactFooterForm'
+import ContactFooterForm from '../components/ContactFooterForm'
 export default function Footer(){
 return (
 <footer id="contacto" className="bg-white/70 backdrop-blur border-t mt-16">

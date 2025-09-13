@@ -1,24 +1,68 @@
-// src/App.jsx
-import Header from './components/Header'
-import Footer from './components/Footer'
-import RoutesView from './routes'
-import { AuthProvider } from './context/AuthContext' // Proveedor global de autenticación
+import { Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import RootLayout from './layouts/RootLayout'
+import DashboardLayout from './layouts/DashboardLayout'
+
+// Páginas principales
+import Home from './pages/Home'
+import ReservaCita from './pages/ReservaCita'
+
+// Autenticación
+import Login from './pages/Auth/Login'
+import Register from './pages/Auth/Register'
+import ForgotPassword from './pages/Auth/ForgotPassword'
+import ResetPassword from './pages/Auth/ResetPassword'
+import VerifyEmail from './pages/Auth/VerifyEmail'
+
+// Dashboards
+import UserDashboard from './pages/Dashboard/UserDashboard'
+import AdminDashboard from './pages/Dashboard/AdminDashboard'
+
+// Utilidades
+import ProtectedRoute from './components/ProtectedRoute'
+import NotFound from './pages/NotFound'
 
 export default function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen flex flex-col bg-[image:var(--bg-grad)] text-zinc-800">
-        {/* Header global */}
-        <Header />
+      <Routes>
+        {/* Layout principal */}
+        <Route element={<RootLayout />}>
+          {/* Públicas */}
+          <Route path="/" element={<Home />} />
+          <Route path="/reservas" element={<ReservaCita />} />
 
-        {/* Contenido principal */}
-        <main id="main-content" className="flex-1">
-          <RoutesView />
-        </main>
+          {/* Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
-        {/* Footer global */}
-        <Footer />
-      </div>
+          {/* Zona de dashboards */}
+          <Route element={<DashboardLayout />}>
+            <Route
+              path="/mi-cuenta"
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
     </AuthProvider>
   )
 }
