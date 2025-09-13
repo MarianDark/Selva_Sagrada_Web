@@ -14,8 +14,8 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-jungle-900 to-earth-800 text-white shadow-md/50 backdrop-blur">
+  return +(
+    <header className="bg-gradient-to-r from-jungle-900 to-earth-800 text-white shadow-md/50 backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* IZQ: Logo + marca (logo pequeño) */}
         <Link to="/" className="flex items-center gap-3 group">
@@ -42,7 +42,11 @@ export default function Header() {
           {!auth.user && <Nav to="/register">Registro</Nav>}
 
           {/* Opcional: cambia Login por Mi cuenta si hay sesión */}
-          {!auth.user ? <Nav to="/login">Iniciar sesión</Nav> : <Nav to="/mi-cuenta">Mi cuenta</Nav>}
+          {!auth.user ? (
+            <Nav to="/login">Iniciar sesión</Nav>
+          ) : (
+            <Nav to="/mi-cuenta">Mi cuenta</Nav>
+          )}
         </nav>
 
         {/* Hamburguesa SOLO móvil */}
@@ -54,14 +58,34 @@ export default function Header() {
           onClick={() => setOpen((v) => !v)}
         >
           {!open ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           )}
           <span className="sr-only">Abrir menú</span>
@@ -76,17 +100,27 @@ export default function Header() {
         }`}
       >
         <div className="px-4 pt-2 pb-4 space-y-1">
-          <MobileNav to="/" onClick={() => setOpen(false)}>Inicio</MobileNav>
+          <MobileNav to="/" onClick={() => setOpen(false)}>
+            Inicio
+          </MobileNav>
           {auth.user && (
-            <MobileNav to="/reservas" onClick={() => setOpen(false)}>Reservas</MobileNav>
+            <MobileNav to="/reservas" onClick={() => setOpen(false)}>
+              Reservas
+            </MobileNav>
           )}
           {!auth.user && (
-            <MobileNav to="/register" onClick={() => setOpen(false)}>Registro</MobileNav>
+            <MobileNav to="/register" onClick={() => setOpen(false)}>
+              Registro
+            </MobileNav>
           )}
           {!auth.user ? (
-            <MobileNav to="/login" onClick={() => setOpen(false)}>Iniciar sesión</MobileNav>
+            <MobileNav to="/login" onClick={() => setOpen(false)}>
+              Iniciar sesión
+            </MobileNav>
           ) : (
-            <MobileNav to="/mi-cuenta" onClick={() => setOpen(false)}>Mi cuenta</MobileNav>
+            <MobileNav to="/mi-cuenta" onClick={() => setOpen(false)}>
+              Mi cuenta
+            </MobileNav>
           )}
         </div>
       </div>
