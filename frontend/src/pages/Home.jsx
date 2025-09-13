@@ -17,12 +17,12 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO */}
+      {/* HERO con video de fondo + layout tipo referencia */}
       <section className="relative w-full h-screen overflow-hidden shadow-2xl">
         {/* Video de fondo */}
         <video
           ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover filter blur-[2px]"
+          className="absolute inset-0 w-full h-full object-cover"
           autoPlay
           loop
           muted
@@ -32,35 +32,55 @@ export default function Home() {
           <source src="/hero.mp4" type="video/mp4" />
         </video>
 
-        {/* Capa oscura encima del video */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-jungle-900/50 to-transparent" />
+        {/* Capas sobre el video para legibilidad (degradado + velo) */}
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/20"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 bg-black/10"
+          aria-hidden="true"
+        />
 
-        {/* Contenido del Hero */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 h-full flex flex-col justify-center items-center text-center text-white">
-          <h1 className="font-display text-4xl md:text-6xl font-bold drop-shadow-lg">
-            Selva Sagrada
-          </h1>
-          <p className="mt-4 text-lg md:text-xl text-white/90 max-w-2xl">
-            Terapias holísticas, conexión y bienestar. Un espacio para volver a ti.
-          </p>
+        {/* Contenido del Hero (alineado como la referencia: left en desktop, center en mobile) */}
+        <div className="relative z-10 max-w-7xl mx-auto h-full px-4 lg:px-8 flex items-center">
+          <div className="max-w-2xl text-white text-center md:text-left">
+            <p className="uppercase tracking-wider text-white/80 text-sm mb-2">
+              Selva Sagrada
+            </p>
+            <h1 className="font-display text-4xl md:text-5xl font-extrabold drop-shadow leading-tight">
+              Sanación y bienestar en armonía con la naturaleza
+            </h1>
+            <p className="mt-4 text-lg md:text-xl text-white/90">
+              Terapias holísticas y sesiones personalizadas para reconectar contigo. Reserva de forma fácil y rápida.
+            </p>
 
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <Link to="/reservas" className="btn-ghost">
-              Reservar ahora
-            </Link>
-            <a
-              href="#beneficios"
-              className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-white text-jungle-800 hover:bg-zinc-100 transition"
-            >
-              Conocer más
-            </a>
+            {/* CTAs principales */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">
+              <Link to="/reservas" className="btn-primary">
+                Reservar ahora
+              </Link>
+              <a
+                href="#beneficios"
+                className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-white/70 text-white hover:bg-white/10 transition"
+              >
+                Explorar terapias
+              </a>
+            </div>
+
+            {/* Badges de confianza */}
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-white/90 justify-center md:justify-start">
+              <span className="inline-flex items-center gap-2">✅ Atención personalizada</span>
+              <span className="inline-flex items-center gap-2">✅ Reserva online fácil</span>
+              <span className="inline-flex items-center gap-2">✅ Enfoque integral</span>
+            </div>
           </div>
         </div>
 
         {/* Botón Play/Pause flotante */}
         <button
           onClick={togglePlay}
-          className="absolute bottom-6 right-6 z-20 p-3 rounded-full bg-white/80 text-jungle-900 shadow-lg hover:bg-white transition"
+          className="absolute bottom-6 right-6 z-20 p-3 rounded-full bg-white/90 text-jungle-900 shadow-lg hover:bg-white transition"
           aria-label={playing ? 'Pausar video' : 'Reproducir video'}
         >
           {playing ? (
@@ -83,18 +103,9 @@ export default function Home() {
         className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-6"
       >
         {[
-          {
-            title: 'Sanación energética',
-            desc: 'Equilibra tu energía y reduce el estrés.',
-          },
-          {
-            title: 'Meditación guiada',
-            desc: 'Vuelve al presente con prácticas simples.',
-          },
-          {
-            title: 'Retiros conscientes',
-            desc: 'Experiencias transformadoras en la naturaleza.',
-          },
+          { title: 'Sanación energética', desc: 'Equilibra tu energía y reduce el estrés.' },
+          { title: 'Meditación guiada', desc: 'Vuelve al presente con prácticas simples.' },
+          { title: 'Retiros conscientes', desc: 'Experiencias transformadoras en la naturaleza.' },
         ].map((s) => (
           <article key={s.title} className="card p-6">
             <h3 className="font-medium text-jungle-800">{s.title}</h3>
