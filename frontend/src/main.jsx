@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-// Handlers globales de errores (solo en desarrollo)
+// Logs de errores solo en dev
 if (import.meta.env.DEV) {
   window.addEventListener('unhandledrejection', (e) => {
     console.groupCollapsed('[UNHANDLED REJECTION]')
@@ -18,7 +18,7 @@ if (import.meta.env.DEV) {
   })
 }
 
-// Asegura que exista el contenedor root
+// Root
 let rootEl = document.getElementById('root')
 if (!rootEl) {
   rootEl = document.createElement('div')
@@ -26,7 +26,6 @@ if (!rootEl) {
   document.body.appendChild(rootEl)
 }
 
-// Inicializa React
 ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -35,22 +34,18 @@ ReactDOM.createRoot(rootEl).render(
   </React.StrictMode>
 )
 
-// 🚀 Registro del Service Worker (solo en producción)
+// Registrar SW solo en producción y si existe soporte
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   import('virtual:pwa-register')
     .then(({ registerSW }) => {
       const updateSW = registerSW({
         onNeedRefresh() {
-          if (confirm('Nueva versión disponible. ¿Actualizar ahora?')) {
-            updateSW(true)
-          }
+          if (confirm('Nueva versión disponible. ¿Actualizar ahora?')) updateSW(true)
         },
         onOfflineReady() {
           console.log('✅ App lista para usarse offline 🚀')
-        }
+        },
       })
     })
-    .catch((err) => {
-      console.warn('[PWA] No se pudo registrar el Service Worker:', err)
-    })
+    .catch((err) => console.warn('[PWA] No se pudo registrar el Service Worker:', err))
 }
