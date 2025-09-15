@@ -103,6 +103,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// 404 para lo que no haya coincidido (no API)
+app.use((req, res, next) => {
+  if (res.headersSent) return next()
+  res.status(404).json({ error: 'Not Found' })
+})
+
 /* Error handler */
 app.use(require('./src/middleware/error'));
 

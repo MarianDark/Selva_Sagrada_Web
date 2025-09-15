@@ -1,7 +1,17 @@
+// CommonJS
 module.exports = (err, req, res, next) => {
-  const status = err.status || 500;
+  // 🔥 Log solo en dev/staging, o siempre si quieres
   if (process.env.NODE_ENV !== 'production') {
-    console.error(err);
+    console.error('🔥 Server error:', err)
   }
-  res.status(status).json({ message: err.message || 'Error interno' });
-};
+
+  if (res.headersSent) return next(err)
+
+  const status = err.status || err.statusCode || 500
+
+  // Respuesta JSON clara y nunca vacía
+  res.status(status).json({
+    error: err.message || 'Internal Server Error',
+    code: err.code || undefined, // opcional, útil si lanzas errores con codes propios
+  })
+}

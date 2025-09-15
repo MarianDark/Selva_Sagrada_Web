@@ -1,7 +1,7 @@
 // src/layouts/RootLayout.jsx
 import { Outlet } from 'react-router-dom'
-import Header from '../layouts/Header.jsx'
-import Footer from '../layouts/Footer.jsx'
+import Header from '../components/Header.jsx'
+import Footer from '../components/Footer.jsx'
 import AddToHomeBanner from '../components/AddToHomeBanner.jsx'
 import ErrorBoundary from '../components/ErrorBoundary.jsx'
 

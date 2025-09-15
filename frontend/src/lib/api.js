@@ -1,15 +1,14 @@
 // src/lib/api.js
 import axios from 'axios'
 
+// Detectamos entorno y construimos baseURL
 const isProd = import.meta.env.MODE === 'production'
 const provided = import.meta.env.VITE_API_URL?.replace(/\/+$/, '')
-
-// 👉 En dev usamos proxy (/api -> vite.config), en prod tomamos la VITE_API_URL
 const baseURL = isProd && provided ? `${provided}/api` : '/api'
 
-const api = axios.create({
+export const api = axios.create({
   baseURL,
-  withCredentials: true, // cookies (session)
+  withCredentials: true, // importante para cookies httpOnly
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -21,6 +20,7 @@ api.interceptors.response.use(
     const method = err.config?.method?.toUpperCase()
     const url = err.config?.url
 
+    // Log más descriptivo (útil en dev/debug)
     console.error('API error:', {
       method,
       url,
@@ -29,15 +29,16 @@ api.interceptors.response.use(
     })
 
     if (status === 401) {
-      // 🚫 evita redirigir si ya estamos en login o registro
+      console.warn('No autorizado o sesión expirada')
+
+      // 🚫 Evita bucle si ya estamos en páginas de auth
       const current = window.location.pathname
       const isAuthPage = ['/login', '/register', '/forgot-password'].some((p) =>
         current.startsWith(p)
       )
 
       if (!isAuthPage) {
-        // opcional: muestra aviso antes de redirigir
-        console.warn('Sesión expirada, redirigiendo a login...')
+        // 🔄 Redirige con "next" para volver luego
         window.location.href = `/login?next=${encodeURIComponent(current)}`
       }
     }
@@ -46,5 +47,4 @@ api.interceptors.response.use(
   }
 )
 
-export { api }
 export default api

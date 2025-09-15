@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react'
 const LS_KEY_HIDE_UNTIL = 'a2hs_hide_until'
 const HIDE_DAYS = 7 // No mostrar de nuevo hasta en X días
 
-const isStandalone =
+const getIsStandalone = () =>
   window.matchMedia?.('(display-mode: standalone)')?.matches ||
   window.navigator.standalone === true
 
@@ -27,6 +27,7 @@ export function useA2HS() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showBanner, setShowBanner] = useState(false)
   const [mode, setMode] = useState('') // 'android' | 'ios' | ''
+  const [isStandalone, setIsStandalone] = useState(getIsStandalone())
 
   const hideForAWhile = useCallback(() => {
     localStorage.setItem(LS_KEY_HIDE_UNTIL, nowPlusDays(HIDE_DAYS))
@@ -34,7 +35,8 @@ export function useA2HS() {
   }, [])
 
   useEffect(() => {
-    if (isStandalone) return // ya instalada → no mostrar
+    setIsStandalone(getIsStandalone())
+    if (getIsStandalone()) return // ya instalada → no mostrar
 
     const hiddenUntil = localStorage.getItem(LS_KEY_HIDE_UNTIL)
     if (!isAfter(hiddenUntil)) return // aún dentro del periodo de ocultamiento
@@ -60,11 +62,10 @@ export function useA2HS() {
 
   const triggerInstall = useCallback(async () => {
     if (!deferredPrompt) return
+    // muestra prompt nativo (Android/Chrome)
     deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    // Si acepta o rechaza, lo ocultamos por un tiempo
+    await deferredPrompt.userChoice // { outcome: 'accepted' | 'dismissed' }
     hideForAWhile()
-    // Limpia referencia
     setDeferredPrompt(null)
   }, [deferredPrompt, hideForAWhile])
 
@@ -72,5 +73,19 @@ export function useA2HS() {
     hideForAWhile()
   }, [hideForAWhile])
 
-  return { showBanner, mode, triggerInstall, dismiss }
+  // API "simple" compatible con tu segunda versión
+  const canInstall = showBanner && mode === 'android'
+  const promptInstall = triggerInstall
+
+  return {
+    // API simple
+    canInstall,
+    promptInstall,
+    // API completa
+    showBanner, // true si debemos mostrar UI (Android o iOS)
+    mode,       // 'android' | 'ios' | ''
+    triggerInstall, // igual que promptInstall
+    dismiss,        // cierra/oculta por N días
+    isStandalone,
+  }
 }

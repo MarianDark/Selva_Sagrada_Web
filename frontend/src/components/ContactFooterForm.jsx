@@ -1,283 +1,194 @@
+// src/components/FormContact.jsx  (ajusta la ruta si lo pones en otra carpeta)
 import { useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from 'react-router-dom'
-import ReCAPTCHA from 'react-google-recaptcha'
 import { api } from '../lib/api'
+import Captcha from './Captcha.jsx'
 
-const phoneRegex = /^[0-9+()\s-]{7,20}$/
+export default function FormContact() {
+  const [nombre, setNombre] = useState('')
+  const [telefono, setTelefono] = useState('')
+  const [email, setEmail] = useState('')
+  const [mensaje, setMensaje] = useState('')
+  const [aceptaTerminos, setAceptaTerminos] = useState(false)
+  const [prefLlamada, setPrefLlamada] = useState(false)
+  const [prefEmail, setPrefEmail] = useState(false)
+  const [prefWhatsapp, setPrefWhatsapp] = useState(false)
 
-const baseSchema = z.object({
-  name: z.string().min(2, 'Escribe tu nombre'),
-  email: z.string().email('Email inválido'),
-  phone: z.string().trim().optional().or(z.literal('')), // opcional
-  message: z.string().min(10, 'Cuéntanos un poco más (mín. 10 caracteres)'),
-  contactMethod: z.enum(['email', 'phone', 'whatsapp'], {
-    errorMap: () => ({ message: 'Elige un método de contacto' }),
-  }),
-  acceptPrivacy: z
-    .boolean()
-    .refine((v) => v === true, 'Debes aceptar la política de privacidad'),
-})
-
-const schema = baseSchema.superRefine((data, ctx) => {
-  // Si prefiere llamada o WhatsApp → teléfono requerido y válido
-  if (data.contactMethod === 'phone' || data.contactMethod === 'whatsapp') {
-    if (!data.phone || !phoneRegex.test(data.phone)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['phone'],
-        message:
-          'Introduce un teléfono válido (incluye prefijo, ej. +34, si aplica).',
-      })
-    }
-  } else {
-    // Si prefiere email y ha escrito teléfono, validar formato si no está vacío
-    if (data.phone && !phoneRegex.test(data.phone)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['phone'],
-        message: 'Formato de teléfono inválido.',
-      })
-    }
-  }
-})
-
-export default function ContactFooterForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-    watch,
-  } = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      message: '',
-      contactMethod: 'email',
-      acceptPrivacy: false,
-    },
-    mode: 'onSubmit',
-  })
-
-  const contactMethod = watch('contactMethod')
-  const [sending, setSending] = useState(false)
   const [ok, setOk] = useState('')
   const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
+
   const captchaRef = useRef(null)
 
-  const onSubmit = async (data) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     setOk('')
     setError('')
+
+    if (!aceptaTerminos) {
+      setError('Debes aceptar la política de privacidad.')
+      return
+    }
+    if (!email && !telefono) {
+      setError('Indica al menos un medio de contacto (email o teléfono).')
+      return
+    }
+
     try {
-      setSending(true)
-      // Obtener token de reCAPTCHA invisible
-      const captchaToken = await captchaRef.current?.executeAsync()
-      captchaRef.current?.reset()
+      setEnviando(true)
+      const captchaToken = await captchaRef.current?.execute('contact')
 
-      if (!captchaToken) {
-        setError('No pudimos verificar el reCAPTCHA. Intenta de nuevo.')
-        return
-      }
-
-      await api.post('/contact', { ...data, captchaToken })
-
-      const methodLabel =
-        data.contactMethod === 'phone'
-          ? 'llamada telefónica'
-          : data.contactMethod === 'whatsapp'
-          ? 'WhatsApp'
-          : 'email'
-
-      setOk(`¡Gracias! Te responderemos por ${methodLabel} pronto.`)
-      reset({
-        name: '',
-        email: '',
-        phone: '',
-        message: '',
-        contactMethod: 'email',
-        acceptPrivacy: false,
+      await api.post('/contact', {
+        name: nombre.trim(),
+        phone: telefono.trim() || undefined,
+        email: email.trim() || undefined,
+        message: mensaje.trim(),
+        preferences: {
+          call: !!prefLlamada,
+          email: !!prefEmail,
+          whatsapp: !!prefWhatsapp,
+        },
+        captchaToken,
       })
+
+      setOk('¡Gracias! Hemos recibido tu mensaje y te contactaremos muy pronto.')
+      setNombre('')
+      setTelefono('')
+      setEmail('')
+      setMensaje('')
+      setAceptaTerminos(false)
+      setPrefLlamada(false)
+      setPrefEmail(false)
+      setPrefWhatsapp(false)
+      try { captchaRef.current?.reset() } catch {}
     } catch (e) {
-      const apiMsg = e?.response?.data?.message
-      setError(apiMsg || 'No se pudo enviar. Intenta de nuevo.')
+      const msg = e?.response?.data?.message || 'No se pudo enviar. Intenta de nuevo.'
+      setError(msg)
     } finally {
-      setSending(false)
+      setEnviando(false)
     }
   }
 
-  const phoneRequired = contactMethod === 'phone' || contactMethod === 'whatsapp'
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-      {/* Nombre */}
-      <div>
+    <div id="contacto" className="pt-2">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 bg-white p-6 sm:p-8 rounded-xl shadow-lg max-w-lg mx-auto"
+      >
+        <h2 className="text-xl font-semibold text-emerald-800 text-center">
+          Contáctanos
+        </h2>
+
         <input
-          {...register('name')}
-          placeholder="Tu nombre"
-          className="w-full rounded-lg border px-3 py-2"
-          aria-invalid={!!errors.name}
-          aria-describedby={errors.name ? 'err-name' : undefined}
+          type="text"
+          placeholder="Nombre"
+          className="border rounded px-4 py-2 w-full text-black"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          required
           autoComplete="name"
         />
-        {errors.name && (
-          <p id="err-name" className="text-xs text-red-600">
-            {errors.name.message}
-          </p>
-        )}
-      </div>
 
-      {/* Email */}
-      <div>
         <input
-          {...register('email')}
+          type="tel"
+          placeholder="Teléfono (opcional)"
+          className="border rounded px-4 py-2 w-full text-black"
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          autoComplete="tel"
+        />
+
+        <input
           type="email"
-          placeholder="Email"
-          className="w-full rounded-lg border px-3 py-2"
-          aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? 'err-email' : undefined}
+          placeholder="Email (opcional)"
+          className="border rounded px-4 py-2 w-full text-black"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
           inputMode="email"
         />
-        {errors.email && (
-          <p id="err-email" className="text-xs text-red-600">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
 
-      {/* Teléfono (opcional / requerido según preferencia) */}
-      <div>
-        <input
-          {...register('phone')}
-          type="tel"
-          placeholder={
-            phoneRequired
-              ? 'Teléfono (requerido para llamada/WhatsApp)'
-              : 'Teléfono (opcional)'
-          }
-          className="w-full rounded-lg border px-3 py-2"
-          aria-invalid={!!errors.phone}
-          aria-describedby={errors.phone ? 'err-phone' : undefined}
-          inputMode="tel"
+        <textarea
+          placeholder="Escribe tu mensaje (máx. 5000 caracteres)"
+          className="border rounded px-4 py-2 w-full text-black h-32 resize-none"
+          value={mensaje}
+          onChange={(e) => setMensaje(e.target.value)}
+          maxLength={5000}
+          required
         />
-        {errors.phone ? (
-          <p id="err-phone" className="text-xs text-red-600">
-            {errors.phone.message}
-          </p>
-        ) : (
-          <p className="text-xs text-zinc-500 mt-1">
-            Acepta formatos como +34 600 123 456 o (600) 123-456.
-          </p>
-        )}
-      </div>
 
-      {/* Preferencia de contacto */}
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-zinc-700">
-          ¿Cómo prefieres que te contactemos?
-        </legend>
-        <div className="flex flex-wrap gap-3">
-          <label className="inline-flex items-center gap-2">
+        {/* Preferencias de contacto */}
+        <div className="flex flex-col gap-2 text-left text-sm text-zinc-700">
+          <label className="flex items-center gap-2">
             <input
-              type="radio"
-              value="email"
-              {...register('contactMethod')}
-              className="accent-emerald-600"
+              type="checkbox"
+              checked={prefLlamada}
+              onChange={(e) => setPrefLlamada(e.target.checked)}
+              className="accent-emerald-600 w-5 h-5"
             />
-            <span>Email</span>
+            Prefiero que me llamen
           </label>
-          <label className="inline-flex items-center gap-2">
+
+          <label className="flex items-center gap-2">
             <input
-              type="radio"
-              value="phone"
-              {...register('contactMethod')}
-              className="accent-emerald-600"
+              type="checkbox"
+              checked={prefEmail}
+              onChange={(e) => setPrefEmail(e.target.checked)}
+              className="accent-emerald-600 w-5 h-5"
             />
-            <span>Llamada telefónica</span>
+            Prefiero que me envíen email
           </label>
-          <label className="inline-flex items-center gap-2">
+
+          <label className="flex items-center gap-2">
             <input
-              type="radio"
-              value="whatsapp"
-              {...register('contactMethod')}
-              className="accent-emerald-600"
+              type="checkbox"
+              checked={prefWhatsapp}
+              onChange={(e) => setPrefWhatsapp(e.target.checked)}
+              className="accent-emerald-600 w-5 h-5"
             />
-            <span>WhatsApp</span>
+            Prefiero WhatsApp
           </label>
         </div>
-        {errors.contactMethod && (
-          <p className="text-xs text-red-600">{errors.contactMethod.message}</p>
-        )}
-      </fieldset>
 
-      {/* Mensaje */}
-      <div>
-        <textarea
-          {...register('message')}
-          placeholder="Mensaje"
-          rows={4}
-          className="w-full rounded-lg border px-3 py-2"
-          aria-invalid={!!errors.message}
-          aria-describedby={errors.message ? 'err-message' : undefined}
-        />
-        {errors.message && (
-          <p id="err-message" className="text-xs text-red-600">
-            {errors.message.message}
-          </p>
-        )}
-      </div>
+        {/* Términos y condiciones */}
+        <div className="flex items-start gap-2 text-left">
+          <input
+            id="acepta-terminos"
+            type="checkbox"
+            checked={aceptaTerminos}
+            onChange={(e) => setAceptaTerminos(e.target.checked)}
+            className="accent-emerald-600 w-5 h-5 mt-1"
+            required
+          />
+          <label htmlFor="acepta-terminos" className="text-sm text-zinc-700">
+            Acepto la{' '}
+            <a
+              href="/legal/privacidad"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 underline hover:text-emerald-800"
+            >
+              Política de Privacidad
+            </a>
+            .
+          </label>
+        </div>
 
-      {/* Acepto privacidad */}
-      <div className="flex items-start gap-2">
-        <input
-          id="acceptPrivacy"
-          type="checkbox"
-          {...register('acceptPrivacy')}
-          className="mt-1 accent-emerald-600"
-          aria-invalid={!!errors.acceptPrivacy}
-          aria-describedby={errors.acceptPrivacy ? 'err-privacy' : undefined}
-        />
-        <label htmlFor="acceptPrivacy" className="text-sm text-zinc-700">
-          He leído y acepto la{' '}
-          <Link
-            to="/legal/privacidad"
-            className="text-emerald-700 underline hover:no-underline"
-          >
-            Política de Privacidad
-          </Link>
-          .
-        </label>
-      </div>
-      {errors.acceptPrivacy && (
-        <p id="err-privacy" className="text-xs text-red-600">
-          {errors.acceptPrivacy.message}
-        </p>
-      )}
+        {/* reCAPTCHA invisble */}
+        <Captcha ref={captchaRef} />
 
-      {/* reCAPTCHA invisible */}
-      <ReCAPTCHA
-        ref={captchaRef}
-        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-        size="invisible"
-      />
+        {/* Mensajes */}
+        {ok && <p className="text-emerald-700 text-sm">{ok}</p>}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      {/* Botón */}
-      <button
-        type="submit"
-        disabled={isSubmitting || sending}
-        className="btn-primary disabled:opacity-60"
-      >
-        {isSubmitting || sending ? 'Enviando…' : 'Enviar'}
-      </button>
-
-      {/* Mensajes */}
-      {ok && <p className="text-sm text-green-600">{ok}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-    </form>
+        {/* Botón enviar */}
+        <button
+          type="submit"
+          disabled={enviando}
+          className="inline-block bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg shadow-md transition w-full disabled:opacity-60"
+        >
+          {enviando ? 'Enviando…' : 'Enviar'}
+        </button>
+      </form>
+    </div>
   )
 }
