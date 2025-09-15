@@ -1,127 +1,85 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ===============================
+   Tailwind v4 — entrada correcta
+   =============================== */
+@import "tailwindcss";
+/* Necesario para que @apply entienda utilidades como font-sans en este archivo */
+@reference "tailwindcss";
 
-/* =========================
-   Base & variables
-   ========================= */
-@layer base {
-  :root {
-    --bg-grad: linear-gradient(180deg, #0f2f1f 0%, #3a6f45 40%, #c4852a 140%);
-  }
-
-  html, body, #root { height: 100%; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    @apply bg-white text-zinc-800 font-body antialiased;
-    background-image: var(--bg-grad);
-    background-attachment: fixed;
-    background-size: 100% 220vh; /* degrade suave en pantallas altas */
-  }
-
-  /* Selección de texto */
-  ::selection { @apply bg-jungle-300 text-jungle-900; }
-
-  /* Foco accesible por defecto */
-  :focus-visible { @apply outline-none ring-2 ring-jungle-500 ring-offset-2; }
-
-  /* Motion friendly */
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation: none !important;
-      transition: none !important;
-      scroll-behavior: auto !important;
-    }
-  }
+/* ====== Keyframes locales ====== */
+@keyframes fadeUp {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatIn {
+  0%   { opacity: 0; transform: translateY(8px) scale(.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* =========================
-   Componentes reutilizables
-   ========================= */
+/* ====== Tokens ====== */
+:root {
+  --bg-grad:
+    radial-gradient(1200px 600px at 50% -10%, rgba(73,174,134,.15), transparent),
+    linear-gradient(180deg, #ffffff 0%, #fbf7f1 100%);
+}
+
+/* ====== Base ====== */
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply font-sans text-zinc-800 bg-white antialiased; }
+}
+
+/* ====== Utilidad de sombra (fallback) ====== */
+.shadow-soft { box-shadow: 0 8px 30px rgba(16, 24, 16, .10); }
+
+/* ====== Componentes reutilizables ====== */
 @layer components {
-  /* Contenedor */
-  .container {
-    @apply max-w-7xl mx-auto px-4;
-  }
-
-  /* Tarjetas suaves */
-  .card {
-    @apply bg-white/80 backdrop-blur border border-zinc-200 rounded-2xl shadow-soft;
-  }
-
-  /* Botones */
-  .btn { @apply inline-flex items-center justify-center gap-2 font-medium transition select-none; }
-  .btn:disabled { @apply opacity-60 cursor-not-allowed; }
+  .card { @apply bg-white/95 backdrop-blur rounded-2xl border border-jungle-100 shadow-soft; }
 
   .btn-primary {
-    @apply btn px-5 py-2.5 rounded-xl bg-jungle-600 text-white hover:bg-jungle-700;
-  }
-
-  .btn-ghost {
-    @apply btn px-5 py-2.5 rounded-xl bg-white/10 text-white hover:bg-white/20;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-2xl font-semibold text-white
+           bg-jungle-700 hover:bg-jungle-800 active:bg-jungle-900 transition;
   }
 
   .btn-outline {
-    @apply btn px-5 py-2.5 rounded-xl border border-jungle-600 text-jungle-700 hover:bg-jungle-50;
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-jungle-600
+           text-jungle-700 hover:bg-jungle-50;
   }
 
-  /* Inputs básicos */
-  .input {
-    @apply w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-jungle-500 focus:border-jungle-500;
-  }
-  .textarea {
-    @apply w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-jungle-500 focus:border-jungle-500;
-  }
+  /* Tabs del header (centradas en el layout, estilos aquí) */
+  .tab { @apply px-4 py-2 rounded-full text-sm font-semibold transition-colors; }
+  .tab-inactive { @apply text-jungle-900/80 hover:text-jungle-900 hover:bg-earth-100; }
+  .tab-active { @apply bg-sun-400 text-amber-950 shadow-sm; }
 
-  /* Títulos display */
-  .heading {
-    @apply font-display font-semibold text-jungle-900;
-  }
+  /* Panel derecho del header (Registro/Login) */
+  .auth-panel { @apply flex items-center gap-1 rounded-xl border border-jungle-200 bg-white shadow-sm p-1.5; }
+
+  /* Entrada suave para pequeños detalles */
+  .enter-up { animation: fadeUp .6s ease-out both; }
 }
 
-/* =========================
-   FullCalendar – tuning UX
-   ========================= */
-/* Usamos selectores .fc-* y @apply para mantenerlos en el bundle */
+/* === WhatsApp bounce suave === */
+@keyframes ss-bounce {
+  0%   { transform: translateY(0) scale(1); }
+  50%  { transform: translateY(-4px) scale(1.03); }
+  100% { transform: translateY(0) scale(1); }
+}
+
 @layer components {
-  .fc { @apply rounded-2xl border bg-white/80 backdrop-blur; }
-
-  .fc .fc-toolbar-title { @apply font-semibold text-jungle-800; }
-
-  .fc .fc-button,
-  .fc .fc-button-primary {
-    @apply !bg-jungle-600 !border-jungle-600 !text-white !rounded-lg;
+  .bounce-soft {
+    animation: ss-bounce 1.8s cubic-bezier(.16,.84,.44,1) infinite;
+    will-change: transform;
+    transform-origin: center;
   }
-  .fc .fc-button:hover,
-  .fc .fc-button-primary:hover {
-    @apply !bg-jungle-700 !border-jungle-700;
-  }
-
-  .fc .fc-col-header-cell-cushion { @apply text-jungle-700; }
-
-  .fc .fc-timegrid-slot { @apply bg-white; }
-  .fc .fc-timegrid-slot-label { @apply text-xs text-zinc-500; }
-
-  .fc .fc-timegrid-now-indicator-line { @apply !border-earth-500; }
-
-  .fc .fc-bg-event { @apply bg-jungle-200/40 !border-0; }
-
-  .fc .fc-highlight { @apply bg-earth-200/60; }
-
-  /* Día actual sutil en vistas de cuadrícula */
-  .fc .fc-day-today { @apply bg-jungle-50/60; }
-
-  /* Chips de evento */
-  .fc .fc-event {
-    @apply !border-0 !rounded-md !bg-jungle-600 !text-white;
-  }
-  .fc .fc-event:hover { @apply !bg-jungle-700; }
 }
 
-/* =========================
-   Utilidades extra
-   ========================= */
-@layer utilities {
-  .text-balance { text-wrap: balance; }
+/* Respeta usuarios con reducción de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .bounce-soft { animation: none !important; }
+}
+
+/* ====== Footer: línea decorativa ====== */
+.footer-line {
+  background: linear-gradient(90deg, #b67c3f 0%, #f0c85a 35%, #49ae86 70%, #15533f 100%);
+  height: 1px;
+  opacity: .35;
 }

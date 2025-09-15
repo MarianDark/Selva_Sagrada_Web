@@ -4,6 +4,7 @@ import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
 import AddToHomeBanner from '../components/AddToHomeBanner.jsx'
 import ErrorBoundary from '../components/ErrorBoundary.jsx'
+import FloatingButtons from '@/components/FloatingButtons'
 
 export default function RootLayout() {
   return (
@@ -19,7 +20,7 @@ export default function RootLayout() {
 
         {/* Footer global */}
         <Footer />
-
+        <FloatingButtons />
         {/* Banner PWA */}
         <AddToHomeBanner />
       </div>

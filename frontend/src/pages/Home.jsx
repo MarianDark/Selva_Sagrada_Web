@@ -22,79 +22,40 @@ export default function Home() {
   return (
     <main className="bg-white">
       {/* HERO con video (sin poster) */}
-      <section className="relative w-full h-[85svh] md:h-screen overflow-hidden">
-        <video
-          ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-        >
-          <source src="/hero.mp4" type="video/mp4" />
-        </video>
+<section className="relative w-full h-[90svh] md:h-screen overflow-hidden">
+  <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" autoPlay loop muted playsInline preload="auto">
+    <source src="/hero.mp4" type="video/mp4" />
+  </video>
 
-        {/* Velo suave para legibilidad */}
-        <div
-          className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-transparent"
-          aria-hidden="true"
-        />
+  <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-transparent" aria-hidden="true" />
 
-        {/* Contenido */}
-        <div className="relative z-10 max-w-7xl mx-auto h-full px-4 lg:px-8 flex items-center">
-          <div className="max-w-2xl text-white text-center md:text-left">
-            <p className="uppercase tracking-wider text-white/90 text-xs md:text-sm mb-2">
-              Selva Sagrada
-            </p>
-            <h1 className="font-display text-4xl md:text-6xl font-extrabold leading-tight drop-shadow">
-              Sanación y bienestar en armonía con la naturaleza
-            </h1>
-            <p className="mt-4 text-base md:text-lg text-white/95">
-              Terapias holísticas y sesiones personalizadas para reconectar contigo. Reserva de forma fácil y rápida.
-            </p>
+  <div className="relative z-10 max-w-7xl mx-auto h-full px-4 lg:px-8 grid place-items-center text-center">
+    <div className="max-w-3xl text-white">
+      <p className="uppercase tracking-wider text-white/90 text-xs md:text-sm mb-2">Selva Sagrada</p>
+      <h1 className="font-display text-4xl md:text-6xl font-extrabold leading-tight drop-shadow-sm">Sanación y bienestar en armonía con la naturaleza</h1>
+      <p className="mt-4 text-base md:text-lg text-white/95">Terapias holísticas y sesiones personalizadas para reconectar contigo. Reserva de forma fácil y rápida.</p>
 
-            {/* CTAs */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">
-              <Link to="/reservas" className="btn-primary">
-                Reservar ahora
-              </Link>
-              <a
-                href="#beneficios"
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-white/70 text-white hover:bg-white/10 transition"
-              >
-                Explorar terapias
-              </a>
-            </div>
+      <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+        <a href="/#contacto" className="btn-primary">Contáctanos</a>
+        <Link to="/reservas" className="btn-outline">Reservar ahora</Link>
+      </div>
 
-            {/* Badges */}
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-white/95 justify-center md:justify-start">
-              <span className="inline-flex items-center gap-2">✅ Atención personalizada</span>
-              <span className="inline-flex items-center gap-2">✅ Reserva online fácil</span>
-              <span className="inline-flex items-center gap-2">✅ Enfoque integral</span>
-            </div>
-          </div>
-        </div>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm text-white/95">
+        <span className="inline-flex items-center gap-2">✅ Atención personalizada</span>
+        <span className="inline-flex items-center gap-2">✅ Reserva online fácil</span>
+        <span className="inline-flex items-center gap-2">✅ Enfoque integral</span>
+      </div>
+    </div>
+  </div>
 
-        {/* Play/Pause */}
-        <button
-          onClick={togglePlay}
-          className="absolute bottom-6 right-6 z-20 p-3 rounded-full bg-white/90 text-jungle-900 shadow-lg hover:bg-white transition"
-          aria-label={playing ? 'Pausar video' : 'Reproducir video'}
-        >
-          {playing ? (
-            // icono pausa
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10 19H7V5h3v14zm7-14h-3v14h3V5z" />
-            </svg>
-          ) : (
-            // icono play
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          )}
-        </button>
-      </section>
+  <button onClick={togglePlay} className="absolute bottom-6 right-6 z-20 p-3 rounded-full bg-mist text-jungle-900 shadow-lg hover:bg-white transition" aria-label={playing ? 'Pausar video' : 'Reproducir video'}>
+    {playing ? (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 19H7V5h3v14zm7-14h-3v14h3V5z" /></svg>
+    ) : (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+    )}
+  </button>
+</section>
 
       {/* BENEFICIOS */}
       <section id="beneficios" className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-3 gap-6">

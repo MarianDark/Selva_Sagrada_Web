@@ -39,12 +39,6 @@ export default function AddToHomeBanner() {
               </a>
             )}
 
-            <button
-              onClick={dismiss}
-              className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-300"
-            >
-              Más tarde
-            </button>
           </div>
         </div>
       </div>

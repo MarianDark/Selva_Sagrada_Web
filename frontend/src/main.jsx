@@ -5,7 +5,11 @@ import App from './App'
 import './index.css'
 
 // 👉 Registro del Service Worker de PWA
-import { registerSW } from 'virtual:pwa-register'
+// import { registerSW } from 'virtual:pwa-register'
+if (import.meta.env.PROD) {
+  const { registerSW } = await import('virtual:pwa-register')
+  registerSW()
+}
 
 // Handlers globales de errores (solo en desarrollo)
 if (import.meta.env.DEV) {

@@ -1,4 +1,4 @@
-// src/components/FormContact.jsx  (ajusta la ruta si lo pones en otra carpeta)
+
 import { useRef, useState } from 'react'
 import { api } from '../lib/api'
 import Captcha from './Captcha.jsx'
