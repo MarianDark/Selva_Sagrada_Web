@@ -4,13 +4,6 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-// 👉 Registro del Service Worker de PWA
-// import { registerSW } from 'virtual:pwa-register'
-if (import.meta.env.PROD) {
-  const { registerSW } = await import('virtual:pwa-register')
-  registerSW()
-}
-
 // Handlers globales de errores (solo en desarrollo)
 if (import.meta.env.DEV) {
   window.addEventListener('unhandledrejection', (e) => {
@@ -42,14 +35,22 @@ ReactDOM.createRoot(rootEl).render(
   </React.StrictMode>
 )
 
-// 🚀 Inicializa el Service Worker (PWA)
-const updateSW = registerSW({
-  onNeedRefresh() {
-    if (confirm('Nueva versión disponible. ¿Actualizar ahora?')) {
-      updateSW(true)
-    }
-  },
-  onOfflineReady() {
-    console.log('✅ App lista para usarse offline 🚀')
-  }
-})
+// 🚀 Registro del Service Worker (solo en producción)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  import('virtual:pwa-register')
+    .then(({ registerSW }) => {
+      const updateSW = registerSW({
+        onNeedRefresh() {
+          if (confirm('Nueva versión disponible. ¿Actualizar ahora?')) {
+            updateSW(true)
+          }
+        },
+        onOfflineReady() {
+          console.log('✅ App lista para usarse offline 🚀')
+        }
+      })
+    })
+    .catch((err) => {
+      console.warn('[PWA] No se pudo registrar el Service Worker:', err)
+    })
+}
