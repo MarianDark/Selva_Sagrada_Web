@@ -1,17 +1,17 @@
-const router = require('express').Router();
-const auth = require('../middleware/auth');
-const C = require('../controllers/booking.controller');
+const router = require('express').Router()
+const auth = require('../middleware/auth')
+const C = require('../controllers/booking.controller')
 
-// Crear reserva — SOLO usuarios logueados
-router.post('/', auth(), C.create);
+// Crear reserva — SOLO usuarios logueados (SIN captcha)
+router.post('/', auth(), ...C.create)
 
-// Mis reservas (requiere login)
-router.get('/me', auth(), C.mine);
+// Mis reservas
+router.get('/me', auth(), C.mine)
 
-// Todas las reservas (admin)
-router.get('/', auth('admin'), C.all);
+// Todas (admin)
+router.get('/', auth('admin'), C.all)
 
-// Cancelar (dueño o admin)
-router.patch('/:id/cancel', auth(), C.cancel);
+// Cancelar
+router.patch('/:id/cancel', auth(), C.cancel)
 
-module.exports = router;
+module.exports = router
