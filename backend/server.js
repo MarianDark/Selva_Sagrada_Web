@@ -59,7 +59,8 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.options('(.*)', cors(corsOptions)) // preflight global (Express 5)
+// ❗ Express 5: usa RegExp para catch-all, no string con '(.*)'
+app.options(/.*/, cors(corsOptions)) // preflight global
 
 /* Parsers */
 app.use(express.json({ limit: '1mb' }))
