@@ -1,4 +1,3 @@
-// backend/src/config/mailer.js
 const nodemailer = require('nodemailer')
 
 const isProd = process.env.NODE_ENV === 'production'
