@@ -4,9 +4,11 @@ const cors = require('cors')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
 const rateLimit = require('express-rate-limit')
-const morgan = require('morgan')
 const connect = require('./src/config/db')
-const rateLimit = require('express-rate-limit')
+
+// Logging
+const pino = require('pino')
+const pinoHttp = require('pino-http')
 
 const app = express()
 const isProd = process.env.NODE_ENV === 'production'
@@ -69,8 +71,8 @@ const limiter = rateLimit({
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-});
-app.use(limiter);
+})
+app.use(limiter)
 
 /* Rate limits específicos */
 const tightLimiter   = rateLimit({ windowMs: 10 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false })
@@ -83,9 +85,21 @@ app.use('/api/auth/forgot-password', tightLimiter)
 app.use('/api/contact', contactLimiter)
 app.use('/api/booking', bookingLimiter)
 
+/* Logger HTTP con pino */
+const transport = !isProd
+  ? pino.transport({ target: 'pino-pretty', options: { singleLine: true }})
+  : undefined
+
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' }, transport)
+
+app.use(pinoHttp({
+  logger,
+  genReqId: (req) =>
+    req.headers['x-request-id'] || Math.random().toString(36).slice(2),
+}))
+
 if (!isProd) {
-  app.use(morgan('dev'))
-  console.log('CORS ALLOWED_ORIGINS →', ALLOWED_ORIGINS)
+  logger.info({ allowed: ALLOWED_ORIGINS }, 'CORS ALLOWED_ORIGINS')
 }
 
 /* Rutas básicas */
@@ -116,14 +130,14 @@ app.use(require('./src/middleware/error'))
 const PORT = process.env.PORT || 3000
 
 connect()
-  .then(() => app.listen(PORT, () => console.log(`API listening on :${PORT}`)))
+  .then(() => app.listen(PORT, () => logger.info(`API listening on :${PORT}`)))
   .catch((err) => {
-    console.error('❌ Error connecting to DB:', err)
+    logger.error({ err }, 'Error connecting to DB')
     process.exit(1)
   })
 
-process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason))
+process.on('unhandledRejection', (reason) => logger.error({ reason }, 'Unhandled Rejection'))
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err)
+  logger.error({ err }, 'Uncaught Exception')
   process.exit(1)
 })
