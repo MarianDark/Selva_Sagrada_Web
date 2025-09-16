@@ -1,40 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es" dir="ltr">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Selva Sagrada</title>
 
-    <!-- SEO -->
-    <meta
-      name="description"
-      content="Selva Sagrada - Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida."
-    />
+    <!-- SEO básico -->
+    <meta name="description" content="Selva Sagrada - Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida." />
+    <link rel="canonical" href="https://tudominio.com/" />
+
+    <!-- Theming -->
     <meta name="theme-color" content="#2e8f6a" />
     <meta name="color-scheme" content="light dark" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="Selva Sagrada" />
-    <meta
-      property="og:description"
-      content="Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida."
-    />
+    <meta property="og:description" content="Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida." />
     <meta property="og:image" content="/poster.jpg" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://tudominio.com" />
+    <meta property="og:url" content="https://tudominio.com/" />
+    <meta property="og:site_name" content="Selva Sagrada" />
+    <meta property="og:locale" content="es_ES" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Selva Sagrada" />
-    <meta
-      name="twitter:description"
-      content="Terapias holísticas, bienestar y retiros."
-    />
+    <meta name="twitter:description" content="Terapias holísticas, bienestar y retiros." />
     <meta name="twitter:image" content="/poster.jpg" />
 
     <!-- Favicons & Manifest -->
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Selva Sagrada" />
@@ -47,7 +43,17 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Ayudas de red (reCAPTCHA y static) -->
+    <link rel="preconnect" href="https://www.google.com" />
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.recaptcha.net" />
+
+    <!-- Opcionales útiles en mobile -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
   </head>
+
   <body class="antialiased bg-white text-zinc-800">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

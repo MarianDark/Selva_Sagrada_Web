@@ -17,7 +17,7 @@ app.disable('x-powered-by');
 /* Helmet (una sola vez, con opciones adecuadas para cookies cross-site) */
 app.use(helmet({
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-  crossOriginResourcePolicy: { policy: 'cross-origin' }, // sirve si tienes assets desde otro origen
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 /** Orígenes permitidos (CORS) — permite exactos y subdominios */
@@ -57,7 +57,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 /* Parsers */
-app.use(express.json({ limit: '1mb' }));   // evita payloads enormes
+app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
 /* Rate limit global */
@@ -78,6 +78,16 @@ app.use('/api/auth/register', tightLimiter);
 app.use('/api/auth/forgot-password', tightLimiter);
 app.use('/api/contact', contactLimiter);
 app.use('/api/booking', bookingLimiter);
+
+/* === Captcha middleware: aplícalo ANTES de montar los routers === */
+const captcha = require('./src/middleware/captcha');
+
+// v2 invisible en frontend → no fuerces score ni action
+app.use('/api/auth/register', captcha());
+app.use('/api/contact', captcha());
+app.use('/api/booking', captcha());
+// Si algún día usas v3 y quieres action/score, sería así:
+// app.use('/api/form', captcha({ enforceScore: true, minScore: 0.6, expectedAction: 'contact' }));
 
 if (!isProd) {
   app.use(morgan('dev'));
