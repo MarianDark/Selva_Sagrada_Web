@@ -1,18 +1,27 @@
+// backend/src/middleware/requireAuth.js
 const jwt = require('jsonwebtoken')
 
 module.exports = function requireAuth(req, res, next) {
   try {
-    const bearer = req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
-      ? req.headers.authorization.split(' ')[1]
-      : null
+    const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'sid'
 
-    const token = (req.cookies && req.cookies.token) || bearer
+    let token = null
+
+    const authz = req.headers.authorization
+    if (authz && authz.startsWith('Bearer ')) {
+      token = authz.slice(7).trim()
+    }
+
+    if (!token && req.cookies) {
+      token = req.cookies[COOKIE_NAME] || req.cookies.token || null
+    }
+
     if (!token) {
       return res.status(401).json({ error: 'No token' })
     }
 
     const payload = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = { id: payload.sub || payload.id, ...payload }
+    req.user = { id: payload.sub || payload.id || payload._id, ...payload }
     next()
   } catch (e) {
     return res.status(401).json({ error: 'Invalid token' })

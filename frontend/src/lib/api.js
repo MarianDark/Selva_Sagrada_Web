@@ -9,7 +9,7 @@ const baseURL = isProd && provided ? `${provided}/api` : '/api'
 export const api = axios.create({
   baseURL,
   withCredentials: true, // importante para cookies httpOnly
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 })
 
 // ====== Interceptor de errores global ======

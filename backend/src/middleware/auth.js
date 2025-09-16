@@ -1,5 +1,3 @@
-// backend/src/middleware/auth.js
-// CommonJS
 const jwt = require('jsonwebtoken')
 
 /**
@@ -17,9 +15,7 @@ const jwt = require('jsonwebtoken')
  */
 module.exports = function auth(options = {}) {
   // Soporta llamada abreviada auth('admin')
-  const normalized = typeof options === 'string'
-    ? { requiredRole: options }
-    : options
+  const normalized = typeof options === 'string' ? { requiredRole: options } : options
 
   const { optional = false, requiredRole = null } = normalized
 
@@ -64,7 +60,7 @@ module.exports = function auth(options = {}) {
       if (requiredRole) {
         const required = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
         const userRole = String(role || '').toLowerCase()
-        const allowed = required.some(r => String(r).toLowerCase() === userRole)
+        const allowed = required.some((r) => String(r).toLowerCase() === userRole)
         if (!allowed) {
           return res.status(403).json({ message: 'Prohibido: rol insuficiente' })
         }

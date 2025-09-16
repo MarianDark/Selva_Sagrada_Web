@@ -62,7 +62,6 @@ export default function Home() {
         {[
           { title: 'Sanación energética', desc: 'Equilibra tu energía y reduce el estrés.' },
           { title: 'Meditación guiada', desc: 'Vuelve al presente con prácticas simples.' },
-          { title: 'Retiros conscientes', desc: 'Experiencias transformadoras en la naturaleza.' },
         ].map((s) => (
           <article key={s.title} className="card p-6">
             <h3 className="font-medium text-jungle-800">{s.title}</h3>
