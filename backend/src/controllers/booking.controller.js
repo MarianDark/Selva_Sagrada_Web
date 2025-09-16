@@ -1,8 +1,8 @@
 const { body } = require('express-validator')
 const validate = require('../middleware/validate')
-const Availability = require('../models/availability')
-const Booking = require('../models/booking')
-const User = require('../models/user')
+const Availability = require('../models/Availability')
+const Booking = require('../models/Booking')
+const User = require('../models/User')
 const { sendMail } = require('../config/mailer')
 
 const rulesCreate = [

@@ -1,6 +1,6 @@
 const { body } = require('express-validator')
 const validate = require('../middleware/validate')
-const Contact = require('../models/contactmessage')
+const Contact = require('../models/ContactMessage')
 const { sendMail } = require('../config/mailer')
 
 // Escapador minimal para no tragar HTML en los correos
