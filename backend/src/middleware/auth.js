@@ -1,3 +1,4 @@
+// backend/src/middleware/auth.js
 // CommonJS
 const jwt = require('jsonwebtoken')
 
@@ -22,21 +23,29 @@ module.exports = function auth(options = {}) {
 
   const { optional = false, requiredRole = null } = normalized
 
+  // Nombre de cookie configurable (por defecto 'sid'); compatibilidad con 'token'
+  const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'sid'
+
   return function authMiddleware(req, res, next) {
     try {
-      // 1) Obtener token desde cookie o header
-      const bearer = req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
-        ? req.headers.authorization.split(' ')[1]
-        : null
+      // 1) Obtener token desde Authorization: Bearer, cookie[SESSION_COOKIE_NAME] o cookie['token'] legacy
+      let token = null
 
-      const token = (req.cookies && req.cookies.token) || bearer
+      const authz = req.headers.authorization
+      if (authz && authz.startsWith('Bearer ')) {
+        token = authz.slice(7).trim()
+      }
+
+      if (!token && req.cookies) {
+        token = req.cookies[COOKIE_NAME] || req.cookies.token || null
+      }
 
       if (!token) {
         if (optional) {
           req.user = null
           return next()
         }
-        return res.status(401).json({ error: 'No token' })
+        return res.status(401).json({ message: 'No autorizado: falta token' })
       }
 
       // 2) Verificar y normalizar payload
@@ -46,8 +55,7 @@ module.exports = function auth(options = {}) {
       const role = payload.role
 
       if (!id) {
-        // payload inválido aunque verificado (no trae id)
-        return res.status(401).json({ error: 'Invalid token payload' })
+        return res.status(401).json({ message: 'Token inválido: sin identificador' })
       }
 
       req.user = { id, role, ...payload }
@@ -55,9 +63,10 @@ module.exports = function auth(options = {}) {
       // 3) Chequear rol si se exige
       if (requiredRole) {
         const required = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
-        const allowed = role && required.includes(role)
+        const userRole = String(role || '').toLowerCase()
+        const allowed = required.some(r => String(r).toLowerCase() === userRole)
         if (!allowed) {
-          return res.status(403).json({ error: 'Forbidden: insufficient role' })
+          return res.status(403).json({ message: 'Prohibido: rol insuficiente' })
         }
       }
 
@@ -69,7 +78,7 @@ module.exports = function auth(options = {}) {
         req.user = null
         return next()
       }
-      return res.status(401).json({ error: 'Invalid token' })
+      return res.status(401).json({ message: 'Token inválido' })
     }
   }
 }
