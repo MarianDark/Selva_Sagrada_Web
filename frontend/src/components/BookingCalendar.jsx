@@ -13,6 +13,7 @@ import Captcha from '@/components/Captcha'
 
 export default function BookingCalendar() {
   const [events, setEvents] = useState([])
+  const [slots, setSlots] = useState([]) // ← guardamos slots enriquecidos (full/remaining)
   const [loading, setLoading] = useState(true)
   const captchaRef = useRef()
   const navigate = useNavigate()
@@ -26,46 +27,84 @@ export default function BookingCalendar() {
     api
       .get('/availability', { params: { from, to } })
       .then(({ data }) => {
-        const ev = data.flatMap((d) =>
-          d.slots.map((s) => ({
-            start: s.start,
-            end: s.end,
-            display: 'background', // zonas reservables
-          }))
-        )
+        // data[].slots[] viene con { start, end, capacity, remaining, full }
+        const ev = []
+        const collectedSlots = []
+
+        data.forEach(d => {
+          (d.slots || []).forEach(s => {
+            // Evento de fondo por slot
+            ev.push({
+              start: s.start,
+              end: s.end,
+              display: 'background',
+              // Colores directos para no depender de clases Tailwind dentro del DOM de FullCalendar
+              backgroundColor: s.full ? 'rgba(239,68,68,0.20)' : 'rgba(16,185,129,0.18)', // red-500 vs emerald-500
+              borderColor: s.full ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)',
+            })
+
+            collectedSlots.push({
+              start: new Date(s.start),
+              end: new Date(s.end),
+              full: !!s.full,
+              remaining: Number(s.remaining ?? 0),
+              capacity: Number(s.capacity ?? 1),
+            })
+          })
+        })
+
         setEvents(ev)
+        setSlots(collectedSlots)
       })
       .finally(() => setLoading(false))
   }, [])
 
+  // Restringe selección a slots libres
+  const selectAllow = (selectInfo) => {
+    const { start, end } = selectInfo
+    const chosen = slots.find(sl => sl.start <= start && sl.end >= end)
+    return !!(chosen && !chosen.full)
+  }
+
   const handleSelect = async (info) => {
-    // Si el estado de auth aún carga, no hacemos nada
     if (authLoading) return
 
-    // Requiere sesión: si no hay user, enviamos a login
+    // Requiere sesión
     if (!user) {
       navigate(`/login?next=${encodeURIComponent('/reservas')}`, { replace: true })
       return
     }
 
-    // Solo pedimos nombre y apellido (email sale del contexto)
+    // Verifica que el rango seleccionado está dentro de un slot libre
+    const chosen = slots.find(sl => sl.start <= info.start && sl.end >= info.end)
+    if (!chosen) {
+      alert('Selecciona dentro de un bloque disponible.')
+      return
+    }
+    if (chosen.full) {
+      alert('Ese horario está completo.')
+      return
+    }
+
     const fullName = prompt('Nombre y apellido para la reserva:')
     if (!fullName || !fullName.trim()) return
 
     try {
       const captchaToken = await captchaRef.current?.execute('book')
 
-      const { data } = await api.post('/booking', {
+      const payload = {
         name: fullName.trim(),
-        email: user.email,               // 👈 se toma del usuario logueado
-        userId: user._id ?? undefined,   // (opcional, por si tu backend lo usa)
         service: 'Sesión Holística',
         start: info.startStr,
         end: info.endStr,
         captchaToken,
-      })
+      }
 
-      alert('Reserva confirmada: ' + new Date(data.start).toLocaleString('es-ES'))
+      const { data } = await api.post('/booking', payload)
+
+      // Confirmación local
+      const when = new Date(data.start).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })
+      alert('Reserva confirmada: ' + when)
     } catch (e) {
       alert(e?.response?.data?.message || 'No se pudo reservar')
     }
@@ -74,9 +113,11 @@ export default function BookingCalendar() {
   return (
     <div className="card p-4">
       <Captcha ref={captchaRef} />
+
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         locale={esLocale}
+        timeZone="Europe/Madrid"
         initialView="timeGridWeek"
         headerToolbar={{
           left: 'prev,next today',
@@ -87,6 +128,7 @@ export default function BookingCalendar() {
         selectable
         selectMirror
         selectOverlap={false}
+        selectAllow={selectAllow}
         select={handleSelect}
         events={events}
         loading={(isLoading) => setLoading(isLoading)}
@@ -101,13 +143,10 @@ export default function BookingCalendar() {
         dayMaxEventRows
       />
 
-      {loading && (
-        <p className="text-sm text-zinc-500 mt-2">Cargando disponibilidad…</p>
-      )}
+      {loading && <p className="text-sm text-zinc-500 mt-2">Cargando disponibilidad…</p>}
+
       <p className="text-xs text-zinc-500 mt-2">
-        {user
-          ? `Reservarás con el email: ${user.email}`
-          : 'Inicia sesión para confirmar tu reserva.'}
+        {user ? `Reservarás con el email: ${user.email}` : 'Inicia sesión para confirmar tu reserva.'}
       </p>
       <p className="text-xs text-zinc-500">Selecciona un bloque resaltado para reservar.</p>
     </div>
