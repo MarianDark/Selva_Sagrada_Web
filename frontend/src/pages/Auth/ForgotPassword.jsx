@@ -1,10 +1,9 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useSearchParams, Link } from 'react-router-dom'
 import { api } from '@/lib/api'
-import Captcha from '@/components/Captcha'
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
@@ -18,29 +17,15 @@ export default function ForgotPassword() {
 
   const [ok, setOk] = useState('')
   const [error, setError] = useState('')
-  const captchaRef = useRef()
   const [searchParams] = useSearchParams()
   const next = searchParams.get('next') || '/mi-cuenta'
 
   const onSubmit = async ({ email }) => {
-    setOk('')
-    setError('')
-
+    setOk(''); setError('')
     try {
-      // Ejecuta reCAPTCHA invisible y obtiene el token
-      const captchaToken = await captchaRef.current?.execute('forgot_password')
-      if (!captchaToken) {
-        setError('No pudimos verificar el reCAPTCHA. Inténtalo de nuevo.')
-        return
-      }
-
-      await api.post('/auth/forgot-password', { email, captchaToken })
-
+      await api.post('/auth/forgot-password', { email })
       setOk('Si el email existe, enviaremos instrucciones para restablecer tu contraseña.')
       reset({ email: '' })
-
-      // Opcional: reset del captcha si tu componente lo soporta
-      try { captchaRef.current?.reset?.() } catch {}
     } catch (e) {
       const msg = e?.response?.data?.message || 'No se pudo procesar la solicitud'
       setError(msg)
@@ -63,9 +48,6 @@ export default function ForgotPassword() {
             <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>
           )}
         </div>
-
-        {/* reCAPTCHA invisible */}
-        <Captcha ref={captchaRef} />
 
         {ok && <p className="text-green-600">{ok}</p>}
         {error && <p className="text-red-600">{error}</p>}

@@ -1,5 +1,5 @@
 // src/components/BookingCalendar.jsx
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -9,13 +9,11 @@ import { useNavigate } from 'react-router-dom'
 
 import { api } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
-import Captcha from '@/components/Captcha'
 
 export default function BookingCalendar() {
   const [events, setEvents] = useState([])
-  const [slots, setSlots] = useState([]) // ← guardamos slots enriquecidos (full/remaining)
+  const [slots, setSlots] = useState([]) // slots enriquecidos (full/remaining)
   const [loading, setLoading] = useState(true)
-  const captchaRef = useRef()
   const navigate = useNavigate()
   const { user, loading: authLoading } = useAuth()
 
@@ -27,19 +25,16 @@ export default function BookingCalendar() {
     api
       .get('/availability', { params: { from, to } })
       .then(({ data }) => {
-        // data[].slots[] viene con { start, end, capacity, remaining, full }
         const ev = []
         const collectedSlots = []
 
         data.forEach(d => {
           (d.slots || []).forEach(s => {
-            // Evento de fondo por slot
             ev.push({
               start: s.start,
               end: s.end,
               display: 'background',
-              // Colores directos para no depender de clases Tailwind dentro del DOM de FullCalendar
-              backgroundColor: s.full ? 'rgba(239,68,68,0.20)' : 'rgba(16,185,129,0.18)', // red-500 vs emerald-500
+              backgroundColor: s.full ? 'rgba(239,68,68,0.20)' : 'rgba(16,185,129,0.18)',
               borderColor: s.full ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)',
             })
 
@@ -59,7 +54,7 @@ export default function BookingCalendar() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Restringe selección a slots libres
+  // Solo permite seleccionar dentro de slots libres
   const selectAllow = (selectInfo) => {
     const { start, end } = selectInfo
     const chosen = slots.find(sl => sl.start <= start && sl.end >= end)
@@ -69,13 +64,11 @@ export default function BookingCalendar() {
   const handleSelect = async (info) => {
     if (authLoading) return
 
-    // Requiere sesión
     if (!user) {
       navigate(`/login?next=${encodeURIComponent('/reservas')}`, { replace: true })
       return
     }
 
-    // Verifica que el rango seleccionado está dentro de un slot libre
     const chosen = slots.find(sl => sl.start <= info.start && sl.end >= info.end)
     if (!chosen) {
       alert('Selecciona dentro de un bloque disponible.')
@@ -90,19 +83,16 @@ export default function BookingCalendar() {
     if (!fullName || !fullName.trim()) return
 
     try {
-      const captchaToken = await captchaRef.current?.execute('book')
-
       const payload = {
         name: fullName.trim(),
         service: 'Sesión Holística',
-        start: info.startStr,
-        end: info.endStr,
-        captchaToken,
+        // usa ISO para evitar líos de zona horaria
+        start: info.start.toISOString(),
+        end: info.end.toISOString(),
       }
 
       const { data } = await api.post('/booking', payload)
 
-      // Confirmación local
       const when = new Date(data.start).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })
       alert('Reserva confirmada: ' + when)
     } catch (e) {
@@ -112,18 +102,12 @@ export default function BookingCalendar() {
 
   return (
     <div className="card p-4">
-      <Captcha ref={captchaRef} />
-
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         locale={esLocale}
         timeZone="Europe/Madrid"
         initialView="timeGridWeek"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'timeGridDay,timeGridWeek,dayGridMonth',
-        }}
+        headerToolbar={{ left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' }}
         buttonText={{ today: 'hoy', month: 'mes', week: 'semana', day: 'día' }}
         selectable
         selectMirror

@@ -1,53 +1,69 @@
-
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { api } from '../lib/api'
-import Captcha from './Captcha.jsx'
 
 export default function FormContact() {
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
-  const [email, setEmail] = useState('')
+  const [email,   setEmail]   = useState('')
   const [mensaje, setMensaje] = useState('')
   const [aceptaTerminos, setAceptaTerminos] = useState(false)
-  const [prefLlamada, setPrefLlamada] = useState(false)
-  const [prefEmail, setPrefEmail] = useState(false)
+  const [prefLlamada, setPrefLlamada]   = useState(false)
+  const [prefEmail, setPrefEmail]       = useState(false)
   const [prefWhatsapp, setPrefWhatsapp] = useState(false)
 
   const [ok, setOk] = useState('')
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)
 
-  const captchaRef = useRef(null)
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setOk('')
     setError('')
 
+    // Validaciones coherentes con tu backend:
+    // - name min 2
+    // - message min 5
+    // - al menos email válido o teléfono con 7+ chars
     if (!aceptaTerminos) {
       setError('Debes aceptar la política de privacidad.')
       return
     }
-    if (!email && !telefono) {
+    const nameTrim = nombre.trim()
+    const msgTrim  = mensaje.trim()
+    const telTrim  = telefono.trim()
+    const mailTrim = email.trim()
+
+    if (nameTrim.length < 2) {
+      setError('El nombre debe tener al menos 2 caracteres.')
+      return
+    }
+    if (msgTrim.length < 5) {
+      setError('El mensaje debe tener al menos 5 caracteres.')
+      return
+    }
+    if (!mailTrim && telTrim.length < 7) {
       setError('Indica al menos un medio de contacto (email o teléfono).')
+      return
+    }
+    if (mailTrim && !/^\S+@\S+\.\S+$/.test(mailTrim)) {
+      setError('Email inválido.')
       return
     }
 
     try {
       setEnviando(true)
-      const captchaToken = await captchaRef.current?.execute('contact')
 
       await api.post('/contact', {
-        name: nombre.trim(),
-        phone: telefono.trim() || undefined,
-        email: email.trim() || undefined,
-        message: mensaje.trim(),
+        name: nameTrim,
+        phone: telTrim || undefined,
+        email: mailTrim || undefined,
+        message: msgTrim,
         preferences: {
           call: !!prefLlamada,
           email: !!prefEmail,
           whatsapp: !!prefWhatsapp,
         },
-        captchaToken,
+        // adiós captchaToken
       })
 
       setOk('¡Gracias! Hemos recibido tu mensaje y te contactaremos muy pronto.')
@@ -59,7 +75,6 @@ export default function FormContact() {
       setPrefLlamada(false)
       setPrefEmail(false)
       setPrefWhatsapp(false)
-      try { captchaRef.current?.reset() } catch {}
     } catch (e) {
       const msg = e?.response?.data?.message || 'No se pudo enviar. Intenta de nuevo.'
       setError(msg)
@@ -73,6 +88,7 @@ export default function FormContact() {
       <form
         onSubmit={handleSubmit}
         className="space-y-4 bg-white p-6 sm:p-8 rounded-xl shadow-lg max-w-lg mx-auto"
+        noValidate
       >
         <h2 className="text-xl font-semibold text-emerald-800 text-center">
           Contáctanos
@@ -95,6 +111,7 @@ export default function FormContact() {
           value={telefono}
           onChange={(e) => setTelefono(e.target.value)}
           autoComplete="tel"
+          inputMode="tel"
         />
 
         <input
@@ -172,9 +189,6 @@ export default function FormContact() {
             .
           </label>
         </div>
-
-        {/* reCAPTCHA invisble */}
-        <Captcha ref={captchaRef} />
 
         {/* Mensajes */}
         {ok && <p className="text-emerald-700 text-sm">{ok}</p>}
