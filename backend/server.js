@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser')
 const rateLimit = require('express-rate-limit')
 const morgan = require('morgan')
 const connect = require('./src/config/db')
+const rateLimit = require('express-rate-limit')
 
 const app = express()
 const isProd = process.env.NODE_ENV === 'production'
@@ -56,19 +57,20 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.options('*', cors(corsOptions)) // preflight global
+app.options('(.*)', cors(corsOptions)) // preflight global (Express 5)
 
 /* Parsers */
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
 
 /* Rate limit global */
-app.use(rateLimit({
+const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-}))
+});
+app.use(limiter);
 
 /* Rate limits específicos */
 const tightLimiter   = rateLimit({ windowMs: 10 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false })
