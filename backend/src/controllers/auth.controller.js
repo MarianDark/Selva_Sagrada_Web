@@ -8,6 +8,26 @@ const EmailToken = require('../models/EmailToken');
 const { transporter } = require('../config/mailer');
 
 const isProd = process.env.NODE_ENV === 'production';
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'sid';
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7d
+
+function getCookieOptions() {
+  const base = {
+    httpOnly: true,
+    path: '/',
+    maxAge: COOKIE_MAX_AGE,
+  };
+  if (isProd) {
+    base.secure = true;
+    base.sameSite = 'none';
+    if (COOKIE_DOMAIN) base.domain = COOKIE_DOMAIN; // ej. .ssselvasagrada.com
+  } else {
+    base.secure = false;
+    base.sameSite = 'lax';
+  }
+  return base;
+}
 
 /* Validaciones */
 const rulesRegister = [
@@ -28,7 +48,7 @@ const rulesReset = [
     .matches(/[a-z]/).withMessage('Debe incluir minúscula')
     .matches(/[0-9]/).withMessage('Debe incluir número')
     .matches(/[^A-Za-z0-9]/).withMessage('Debe incluir símbolo'),
-  body('token').isString().notEmpty().withMessage('Token requerido')
+  body('token').isString().notEmpty().withMessage('Token requerido'),
 ];
 
 /* REGISTER */
@@ -55,12 +75,17 @@ exports.register = [
 
       const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
 
-      await transporter.sendMail({
-        to: email,
-        from: process.env.SMTP_FROM,
-        subject: 'Confirma tu email – Selva Sagrada',
-        html: `<p>Hola ${name}, confirma tu email:</p><p><a href="${verifyUrl}">Verificar</a></p>`,
-      });
+      try {
+        await transporter.sendMail({
+          to: email,
+          from: process.env.SMTP_FROM,
+          subject: 'Confirma tu email – Selva Sagrada',
+          html: `<p>Hola ${name},</p><p>Confirma tu email:</p><p><a href="${verifyUrl}">Verificar</a></p>`,
+        });
+      } catch (err) {
+        // no rompas el registro si el correo falla
+        console.warn('[MAIL] Error enviando verificación:', err?.message);
+      }
 
       res.status(201).json({ message: 'Registro exitoso. Revisa tu email.' });
     } catch (e) { next(e); }
@@ -116,12 +141,7 @@ exports.login = async (req, res, next) => {
       { expiresIn: '7d' }
     );
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(COOKIESAFE(COOKIE_NAME), token, getCookieOptions());
 
     res.json({
       message: 'Login OK',
@@ -130,20 +150,25 @@ exports.login = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+// tiny helper to avoid setting invalid cookie names accidentally
+function COOKIESAFE(name) {
+  return String(name || '').trim() || 'sid';
+}
+
 /* LOGOUT */
 exports.logout = (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-  });
+  // Para borrar, los flags relevantes deben coincidir con los de setCookie
+  const opts = getCookieOptions();
+  delete opts.maxAge; // clearCookie no necesita maxAge
+  res.clearCookie(COOKIESAFE(COOKIE_NAME), opts);
   res.json({ message: 'Logout' });
 };
 
 /* ME */
 exports.me = async (req, res, next) => {
   try {
-    const u = await User.findById(req.user.id).select('_id name email role isEmailVerified');
+    const u = await User.findById(req.user.id)
+      .select('_id name email role isEmailVerified');
     if (!u) return res.sendStatus(404);
     res.json({
       id: u._id,
@@ -162,7 +187,7 @@ exports.forgotPassword = async (req, res, next) => {
     if (!email) return res.status(400).json({ message: 'Email requerido' });
 
     const u = await User.findOne({ email });
-    // Respuesta genérica para no filtrar existencia de cuentas
+    // Respuesta genérica
     if (!u) return res.json({ message: 'Si el email existe, enviaremos instrucciones' });
 
     const token = crypto.randomBytes(32).toString('hex');
@@ -175,14 +200,18 @@ exports.forgotPassword = async (req, res, next) => {
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
 
-    await transporter.sendMail({
-      to: u.email,
-      from: process.env.SMTP_FROM,
-      subject: 'Restablecer contraseña – Selva Sagrada',
-      html: `<p>Hola ${u.name || ''}, has solicitado restablecer tu contraseña.</p>
-             <p>Haz clic aquí para continuar: <a href="${resetUrl}">Restablecer contraseña</a></p>
-             <p>Si no fuiste tú, ignora este mensaje.</p>`
-    });
+    try {
+      await transporter.sendMail({
+        to: u.email,
+        from: process.env.SMTP_FROM,
+        subject: 'Restablecer contraseña – Selva Sagrada',
+        html: `<p>Hola ${u.name || ''}, has solicitado restablecer tu contraseña.</p>
+               <p>Haz clic aquí para continuar: <a href="${resetUrl}">Restablecer contraseña</a></p>
+               <p>Si no fuiste tú, ignora este mensaje.</p>`
+      });
+    } catch (err) {
+      console.warn('[MAIL] Error enviando reset:', err?.message);
+    }
 
     res.json({ message: 'Si el email existe, enviaremos instrucciones' });
   } catch (e) { next(e); }
