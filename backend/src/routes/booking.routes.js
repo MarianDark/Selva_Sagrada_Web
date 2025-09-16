@@ -2,7 +2,7 @@ const router = require('express').Router()
 const auth = require('../middleware/auth')
 const C = require('../controllers/booking.controller')
 
-// Crear reserva — SOLO usuarios logueados (SIN captcha)
+// Crear reserva — SOLO usuarios logueados 
 router.post('/', auth(), ...C.create)
 
 // Mis reservas

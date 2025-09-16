@@ -21,7 +21,7 @@ function getCookieOptions() {
   return base
 }
 
-/* Validaciones */ 
+/* Validaciones */ //
 const rulesRegister = [
   body('name').isLength({ min: 2 }).trim(),
   body('email').isEmail().normalizeEmail(),
@@ -43,7 +43,7 @@ const rulesReset = [
   body('token').isString().notEmpty().withMessage('Token requerido'),
 ]
 
-/* REGISTER (sin captcha) */
+/* REGISTER */
 exports.register = [
   ...rulesRegister,
   validate,
@@ -105,7 +105,7 @@ exports.verifyEmail = async (req, res, next) => {
   } catch (e) { next(e) }
 }
 
-/* LOGIN (con captcha en la ruta) */
+/* LOGIN */
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -141,7 +141,7 @@ exports.me = async (req, res, next) => {
   } catch (e) { next(e) }
 }
 
-/* FORGOT / RESET (sin captcha) */
+/* FORGOT / RESET  */
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body

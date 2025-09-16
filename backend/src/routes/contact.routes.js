@@ -2,7 +2,7 @@ const router = require('express').Router()
 const auth = require('../middleware/auth')
 const C = require('../controllers/contact.controller')
 
-// Crear mensaje (SIN captcha)
+// Crear mensaje 
 router.post('/', ...C.create)
 
 // Listar mensajes (solo admin)
