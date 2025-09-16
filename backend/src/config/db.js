@@ -12,6 +12,8 @@ module.exports = async function connect() {
     serverSelectionTimeoutMS: 5000
   });
 
-  mongoose.connection.on('connected', () => console.log('✅ MongoDB connected'));
-  mongoose.connection.on('error', (err) => console.error('MongoDB error:', err));
+  const conn = mongoose.connection;
+  conn.on('connected', () => console.log('✅ MongoDB connected'));
+  conn.on('reconnectFailed', () => console.error('❌ MongoDB reconnect failed'));
+  conn.on('error', (err) => console.error('MongoDB error:', err));
 };
