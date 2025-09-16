@@ -1,4 +1,3 @@
-// CommonJS
 module.exports = (err, req, res, next) => {
   // 🔥 Log solo en dev/staging, o siempre si quieres
   if (process.env.NODE_ENV !== 'production') {

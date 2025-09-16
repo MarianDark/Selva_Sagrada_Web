@@ -1,4 +1,3 @@
-// backend/src/controllers/contact.controller.js
 const { body } = require('express-validator')
 const validate = require('../middleware/validate')
 const Contact = require('../models/contactmessage')

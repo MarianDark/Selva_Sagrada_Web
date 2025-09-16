@@ -1,4 +1,3 @@
-// backend/src/models/contactmessage.js
 const { Schema, model } = require('mongoose')
 
 const PreferencesSchema = new Schema(

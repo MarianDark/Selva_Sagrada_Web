@@ -1,5 +1,5 @@
-const Availability = require('../models/Availability')
-const Booking = require('../models/Booking')
+const Availability = require('../models/availability')
+const Booking = require('../models/ booking')
 
 exports.getAvailability = async (req, res, next) => {
   try {

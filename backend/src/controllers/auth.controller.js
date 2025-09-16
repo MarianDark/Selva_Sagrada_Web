@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken')
 const { body } = require('express-validator')
 const crypto = require('crypto')
 const validate = require('../middleware/validate')
-const User = require('../models/User')
-const EmailToken = require('../models/EmailToken')
+const User = require('../models/user')
+const EmailToken = require('../models/emailtoken')
 const { transporter } = require('../config/mailer')
 
 const isProd = process.env.NODE_ENV === 'production'

@@ -1,4 +1,3 @@
-// backend/src/middleware/requireAuth.js
 const jwt = require('jsonwebtoken')
 
 module.exports = function requireAuth(req, res, next) {
