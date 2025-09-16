@@ -21,7 +21,7 @@ function getCookieOptions() {
   return base
 }
 
-/* Validaciones */ //
+/* Validaciones */ 
 const rulesRegister = [
   body('name').isLength({ min: 2 }).trim(),
   body('email').isEmail().normalizeEmail(),
