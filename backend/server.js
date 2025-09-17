@@ -1,19 +1,20 @@
-require('dotenv').config()
-const express = require('express')
-const cors = require('cors')
-const helmet = require('helmet')
-const cookieParser = require('cookie-parser')
-const rateLimit = require('express-rate-limit')
-const connect = require('./src/config/db')
-const pino = require('pino')
-const pinoHttp = require('pino-http')
+require('dotenv').config();
+const { randomUUID } = require('crypto'); // <- añade esto
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
+const connect = require('./src/config/db');
+const pino = require('pino');
+const pinoHttp = require('pino-http');
 
-const app = express()
-const isProd = process.env.NODE_ENV === 'production'
+const app = express();
+const isProd = process.env.NODE_ENV === 'production';
 
 /* Proxies (Render/NGINX) + seguridad base */
-app.set('trust proxy', 1)
-app.disable('x-powered-by')
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
 /* Helmet */
 app.use(
@@ -21,7 +22,7 @@ app.use(
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
-)
+);
 
 /* ===== CORS con credenciales ===== */
 const RAW_ORIGINS = Array.from(
@@ -30,90 +31,63 @@ const RAW_ORIGINS = Array.from(
       process.env.CLIENT_URL,
       ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
       !isProd && 'http://localhost:5173',
-      process.env.ALLOW_RENDER_ORIGIN === '1' &&
-        'https://selva-sagrada-web.onrender.com',
+      process.env.ALLOW_RENDER_ORIGIN === '1' && 'https://selva-sagrada-web.onrender.com',
     ]
       .filter(Boolean)
       .map(s => s.trim())
   )
-)
+);
 
-const ALLOWED_ORIGINS = RAW_ORIGINS.map(u => {
-  try {
-    return new URL(u).origin
-  } catch {
-    return null
-  }
-}).filter(Boolean)
+const ALLOWED_ORIGINS = RAW_ORIGINS
+  .map(u => {
+    try { return new URL(u).origin; } catch { return null; }
+  })
+  .filter(Boolean);
 
 const corsOptions = {
   origin(origin, cb) {
-    if (!origin) return cb(null, true) // healthchecks/cURL
-    const ok = ALLOWED_ORIGINS.includes(origin)
-    return cb(ok ? null : new Error(`Not allowed by CORS: ${origin}`), ok)
+    if (!origin) return cb(null, true); // healthchecks/cURL
+    const ok = ALLOWED_ORIGINS.includes(origin);
+    return cb(ok ? null : new Error(`Not allowed by CORS: ${origin}`), ok);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 204,
-}
+};
 
-app.use(cors(corsOptions))
-// Express 5: catch-all con RegExp
-app.options(/.*/, cors(corsOptions))
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 /* Parsers */
-app.use(express.json({ limit: '1mb' }))
-app.use(cookieParser())
+app.use(express.json({ limit: '1mb' }));
+app.use(cookieParser());
 
 /* Rate limits */
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-app.use(limiter)
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
+app.use(limiter);
 
-const tightLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-const contactLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 40,
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-const bookingLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-})
+const tightLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
+const contactLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
+const bookingLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false });
 
-app.use('/api/auth/login', tightLimiter)
-app.use('/api/auth/register', tightLimiter)
-app.use('/api/auth/forgot-password', tightLimiter)
-app.use('/api/contact', contactLimiter)
-app.use('/api/booking', bookingLimiter)
+app.use('/api/auth/login', tightLimiter);
+app.use('/api/auth/register', tightLimiter);
+app.use('/api/auth/forgot-password', tightLimiter);
+app.use('/api/contact', contactLimiter);
+app.use('/api/booking', bookingLimiter);
 
 /* Logger (pino + pino-http) */
-const transport = !isProd
-  ? pino.transport({ target: 'pino-pretty', options: { singleLine: true } })
-  : undefined
+const transport = !isProd ? pino.transport({ target: 'pino-pretty', options: { singleLine: true } }) : undefined;
 
 const logger = pino(
   {
     level: process.env.LOG_LEVEL || (isProd ? 'warn' : 'info'),
-    // No imprimas credenciales en logs
     redact: {
       paths: [
         'req.headers.cookie',
         'req.headers.authorization',
-        'res.headers["set-cookie"]', // ← FIX: usar corchetes por el guion
+        'res.headers["set-cookie"]',
         'req.body.password',
         'req.body.token',
       ],
@@ -122,88 +96,67 @@ const logger = pino(
     },
   },
   transport
-)
+);
 
-const IGNORED_ROUTES = ['/api/auth/me', '/api/health']
+const IGNORED_ROUTES = ['/api/auth/me', '/api/health'];
 
-// pino-http debe ir ANTES de las rutas
 app.use(
   pinoHttp({
     logger,
-    genReqId: req =>
-      req.headers['x-request-id'] ||
-      (typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : Math.random().toString(36).slice(2)),
+    genReqId: req => req.headers['x-request-id'] || randomUUID(),
     autoLogging: {
-      ignore: req =>
-        req.method === 'OPTIONS' ||
-        IGNORED_ROUTES.some(p => req.url.startsWith(p)),
+      ignore: req => req.method === 'OPTIONS' || IGNORED_ROUTES.some(p => req.url.startsWith(p)),
     },
     customLogLevel: (res, err) => {
-      if (err || res.statusCode >= 500) return 'error'
-      if (res.statusCode >= 400) return 'warn'
-      return isProd ? 'silent' : 'info'
+      if (err || res.statusCode >= 500) return 'error';
+      if (res.statusCode >= 400) return 'warn';
+      return isProd ? 'silent' : 'info';
     },
     serializers: {
-      req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url,
-          ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
-        }
-      },
-      res(res) {
-        return { statusCode: res.statusCode }
-      },
+      req(req) { return { id: req.id, method: req.method, url: req.url, ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress }; },
+      res(res) { return { statusCode: res.statusCode }; },
     },
   })
-)
+);
 
-if (!isProd) logger.info({ allowed: ALLOWED_ORIGINS }, 'CORS ALLOWED_ORIGINS')
+if (!isProd) logger.info({ allowed: ALLOWED_ORIGINS }, 'CORS ALLOWED_ORIGINS');
 
 /* Rutas básicas */
-app.get('/', (_, res) => res.json({ name: 'Selva Sagrada API', status: 'ok' }))
-app.get('/api/health', (_, res) => res.json({ status: 'ok' }))
+app.get('/', (_, res) => res.json({ name: 'Selva Sagrada API', status: 'ok' }));
+app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
 /* Rutas API */
-app.use('/api/auth', require('./src/routes/auth.routes'))
-app.use('/api/availability', require('./src/routes/availability.routes'))
-app.use('/api/booking', require('./src/routes/booking.routes'))
-app.use('/api/contact', require('./src/routes/contact.routes'))
+app.use('/api/auth', require('./src/routes/auth.routes'));
+app.use('/api/availability', require('./src/routes/availability.routes'));
+app.use('/api/booking', require('./src/routes/booking.routes'));
+app.use('/api/contact', require('./src/routes/contact.routes'));
 
 /* 404 para /api desconocidas */
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/'))
-    return res.status(404).json({ message: 'Not Found' })
-  next()
-})
+  if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
+  next();
+});
 
-/* 404 genérico para el resto */
+/* 404 genérico */
 app.use((req, res, next) => {
-  if (res.headersSent) return next()
-  res.status(404).json({ error: 'Not Found' })
-})
+  if (res.headersSent) return next();
+  res.status(404).json({ error: 'Not Found' });
+});
 
 /* Error handler */
-app.use(require('./src/middleware/error'))
+app.use(require('./src/middleware/error'));
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3000;
 
 connect()
-  .then(() =>
-    app.listen(PORT, () => logger.info(`API listening on :${PORT}`))
-  )
+  .then(() => app.listen(PORT, () => logger.info(`API listening on :${PORT}`)))
   .catch(err => {
-    logger.error({ err }, 'Error connecting to DB')
-    process.exit(1)
-  })
+    logger.error({ err }, 'Error connecting to DB');
+    process.exit(1);
+  });
 
-process.on('unhandledRejection', reason =>
-  logger.error({ reason }, 'Unhandled Rejection')
-)
+process.on('unhandledRejection', reason => logger.error({ reason }, 'Unhandled Rejection'));
 process.on('uncaughtException', err => {
-  logger.error({ err }, 'Uncaught Exception')
-  process.exit(1)
-})
+  logger.error({ err }, 'Uncaught Exception');
+  process.exit(1);
+});

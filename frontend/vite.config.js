@@ -19,7 +19,12 @@ export default defineConfig(({ mode }) => {
     plugins.push(
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo-192.png', 'logo-512.png'],
+        includeAssets: [
+          'favicon.ico',
+          'apple-touch-icon.png',
+          'logo-192.png',
+          'logo-512.png',
+        ],
         manifest: {
           name: 'Selva Sagrada',
           short_name: 'SelvaSagrada',
@@ -38,38 +43,67 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          cleanupOutdatedCaches: true,
           runtimeCaching: [
+            // Google Fonts stylesheets
             {
-              urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-              handler: 'CacheFirst',
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'StaleWhileRevalidate',
               options: {
-                cacheName: 'google-fonts',
-                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheName: 'google-fonts-stylesheets',
               },
             },
+            // Google Fonts webfonts
             {
-              urlPattern: /^https:\/\/cdn.jsdelivr.net\/.*/i,
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-webfonts',
+                expiration: {
+                  maxEntries: 30,
+                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 año
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            // CDN jsdelivr
+            {
+              urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'cdn-cache',
-                expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 },
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
+                },
               },
             },
+            // HTML documents
             {
               urlPattern: ({ request }) => request.destination === 'document',
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'html-cache',
-                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24, // 1 día
+                },
               },
             },
+            // Scripts y CSS
             {
               urlPattern: ({ request }) =>
-                request.destination === 'script' || request.destination === 'style',
+                request.destination === 'script' ||
+                request.destination === 'style',
               handler: 'StaleWhileRevalidate',
               options: {
                 cacheName: 'static-resources',
-                expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 },
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
+                },
               },
             },
           ],
@@ -87,14 +121,13 @@ export default defineConfig(({ mode }) => {
       hmr: { overlay: false },
       proxy: {
         '/api': {
-          target,                  // http://localhost:3000 o el remoto
+          target, // http://localhost:3000 o el remoto
           changeOrigin: true,
-          secure: isHttps,         // true si target es https con cert válido
+          secure: isHttps, // true si target es https con cert válido
           cookieDomainRewrite: 'localhost',
         },
       },
     },
-    // Si algún día PostCSS se pone diva, descomenta esto para forzarlo:
     // css: {
     //   postcss: {
     //     plugins: [require('@tailwindcss/postcss'), require('autoprefixer')],

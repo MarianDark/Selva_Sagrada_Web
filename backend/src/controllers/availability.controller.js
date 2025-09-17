@@ -1,11 +1,11 @@
 const Availability = require('../models/Availability');
-const Booking = require('../models/Booking'); // <-- sin espacio
+const Booking = require('../models/Booking');
 
 exports.getAvailability = async (req, res, next) => {
   try {
     const { from, to } = req.query;
-
     const q = {};
+
     if (from && to) {
       const f = new Date(from);
       const t = new Date(to);
@@ -15,19 +15,14 @@ exports.getAvailability = async (req, res, next) => {
       q.date = { $gte: f, $lte: t };
     }
 
-    // 1) Trae disponibilidades
     const daysRaw = await Availability.find(q).lean();
-
     if (!daysRaw.length) return res.json([]);
 
-    // Filtra días sin slots válidos
     const days = daysRaw
       .map(d => ({ ...d, slots: Array.isArray(d.slots) ? d.slots : [] }))
       .filter(d => d.slots.length > 0);
-
     if (!days.length) return res.json([]);
 
-    // Rango bruto de fechas para buscar bookings superpuestos
     const allStarts = [];
     const allEnds = [];
     for (const d of days) {
@@ -43,14 +38,12 @@ exports.getAvailability = async (req, res, next) => {
     const minStart = new Date(Math.min(...allStarts));
     const maxEnd = new Date(Math.max(...allEnds));
 
-    // 2) Busca bookings que toquen cualquier slot del rango (excluye canceladas)
     const bookings = await Booking.find({
       status: { $ne: 'cancelled' },
       start: { $lt: maxEnd },
       end: { $gt: minStart }
     }).select('start end status').lean();
 
-    // 3) Para cada slot calcula las plazas restantes (capacity - solapes)
     const enriched = days.map(d => {
       const slots = (d.slots || []).map(sl => {
         const s = new Date(sl.start);
@@ -64,26 +57,14 @@ exports.getAvailability = async (req, res, next) => {
         }, 0);
 
         const remaining = Math.max(cap - overlapCount, 0);
-        return {
-          start: s,
-          end: e,
-          capacity: cap,
-          remaining,
-          full: remaining <= 0
-        };
+        return { start: s, end: e, capacity: cap, remaining, full: remaining <= 0 };
       });
 
-      return {
-        _id: d._id,
-        date: d.date,
-        slots
-      };
+      return { _id: d._id, date: d.date, slots };
     });
 
     res.json(enriched);
-  } catch (e) {
-    next(e);
-  }
+  } catch (e) { next(e); }
 };
 
 exports.setAvailability = async (req, res, next) => {
@@ -96,7 +77,6 @@ exports.setAvailability = async (req, res, next) => {
     const d = new Date(date); d.setHours(0, 0, 0, 0);
     if (isNaN(+d)) return res.status(400).json({ message: 'Fecha inválida' });
 
-    // Validar slots
     const norm = [];
     for (const sl of slots) {
       const s = new Date(sl.start);
@@ -108,7 +88,6 @@ exports.setAvailability = async (req, res, next) => {
       norm.push({ start: s, end: e, capacity });
     }
 
-    // (Opcional) Validar que no haya solapes entre slots del mismo día
     norm.sort((a, b) => +a.start - +b.start);
     for (let i = 1; i < norm.length; i++) {
       if (norm[i - 1].end > norm[i].start) {
