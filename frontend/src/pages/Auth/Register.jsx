@@ -29,6 +29,8 @@ const schema = z
 export default function Register() {
   const [ok, setOk] = useState('')
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const {
     register,
@@ -51,14 +53,12 @@ export default function Register() {
     setOk('')
     setError('')
     try {
-      // 1) Registro en backend
       await api.post('/auth/register', {
         name: values.name,
         email: values.email,
         password: values.password,
       })
 
-      // 2) Intento de auto-login (por si el backend lo permite sin verificar)
       try {
         await api.post('/auth/login', {
           email: values.email,
@@ -67,18 +67,14 @@ export default function Register() {
         await loginSuccess()
         return navigate(next, { replace: true })
       } catch (e) {
-        // Si falla (p.ej. exige verificación), informamos y dejamos instrucciones
         const status = e?.response?.status
         if (status === 401 || status === 403) {
-          setOk(
-            'Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión.'
-          )
+          setOk('Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión.')
         } else {
           setOk('Registro exitoso. Ahora puedes iniciar sesión.')
         }
       }
 
-      // 3) Limpiar formulario
       reset({ name: '', email: '', password: '', confirm: '' })
     } catch (e) {
       const msg = e?.response?.data?.message || 'No se pudo registrar.'
@@ -102,9 +98,7 @@ export default function Register() {
           className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
           {...register('name')}
         />
-        {errors.name && (
-          <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
-        )}
+        {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
       </div>
 
       <div>
@@ -114,22 +108,36 @@ export default function Register() {
           className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
           {...register('email')}
         />
-        {errors.email && (
-          <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
-        )}
+        {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
       </div>
 
-      <div>
+      {/* Password con ojo turco */}
+      <div className="relative">
         <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Contraseña"
-          className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-md border px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
           {...register('password')}
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword((v) => !v)}
+          className="absolute right-3 top-1/2 -translate-y-1/2"
+        >
+          {showPassword ? (
+            <img src="/ojo-turco.jpg" alt="Ocultar" className="h-5 w-5" />
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-5 w-5 text-gray-500">
+              <path
+                fill="currentColor"
+                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"
+              />
+              <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+            </svg>
+          )}
+        </button>
         {errors.password ? (
-          <p className="text-sm text-red-600 mt-1">
-            {errors.password.message}
-          </p>
+          <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
         ) : (
           <ul className="text-xs text-zinc-600 mt-1 list-disc ml-5">
             <li>Mínimo 8 caracteres</li>
@@ -138,21 +146,35 @@ export default function Register() {
         )}
       </div>
 
-      <div>
+      {/* Confirm con ojo turco */}
+      <div className="relative">
         <input
-          type="password"
+          type={showConfirm ? 'text' : 'password'}
           placeholder="Confirmar contraseña"
-          className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-md border px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
           {...register('confirm')}
         />
+        <button
+          type="button"
+          onClick={() => setShowConfirm((v) => !v)}
+          className="absolute right-3 top-1/2 -translate-y-1/2"
+        >
+          {showConfirm ? (
+            <img src="/ojo-turco.jpg" alt="Ocultar" className="h-5 w-5" />
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-5 w-5 text-gray-500">
+              <path
+                fill="currentColor"
+                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"
+              />
+              <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+            </svg>
+          )}
+        </button>
         {errors.confirm ? (
-          <p className="text-sm text-red-600 mt-1">
-            {errors.confirm.message}
-          </p>
+          <p className="text-sm text-red-600 mt-1">{errors.confirm.message}</p>
         ) : password ? (
-          <p className="text-xs text-zinc-500 mt-1">
-            Debe coincidir con la contraseña.
-          </p>
+          <p className="text-xs text-zinc-500 mt-1">Debe coincidir con la contraseña.</p>
         ) : null}
       </div>
 

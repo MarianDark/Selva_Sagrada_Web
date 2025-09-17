@@ -5,23 +5,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 
-function EyeTurcoIcon({ className = 'w-5 h-5' }) {
-  // Ojo turco (nazar) en SVG: anillos azul oscuro, blanco, azul claro y pupila negra
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <circle cx="12" cy="12" r="10" fill="#0B4AA2" />       {/* azul oscuro */}
-      <circle cx="12" cy="12" r="6.8" fill="#FFFFFF" />      {/* blanco */}
-      <circle cx="12" cy="12" r="4.4" fill="#32A5FF" />      {/* azul claro */}
-      <circle cx="12" cy="12" r="2" fill="#000000" />        {/* pupila */}
-    </svg>
-  )
-}
-
 export default function Login() {
   const { register, handleSubmit, setValue } = useForm()
   const [submitting, setSubmitting] = useState(false)
@@ -37,25 +20,26 @@ export default function Login() {
     setError('')
     setSubmitting(true)
     try {
-      // Mandamos credenciales y punto. No se guardan en estado.
+      // Enviamos credenciales (la password no se guarda en estado)
       await api.post('/auth/login', {
         email: form.email,
         password: form.password,
       })
 
+      // Refresca sesión en el contexto
       await loginSuccess()
 
-      // Higiene: limpia el password y saca foco del campo
+      // Higiene: limpia password y quita foco
       setValue('password', '')
       passInputRef.current?.blur()
 
+      // Redirección
       const next = searchParams.get('next') || '/mi-cuenta'
       navigate(next, { replace: true })
     } catch (e) {
-      const msg =
-        e?.response?.data?.message || e?.message || 'Error iniciando sesión'
+      const msg = e?.response?.data?.message || e?.message || 'Error iniciando sesión'
       setError(msg)
-      // limpia y vuelve el foco al password para reintento rápido
+      // limpia y enfoca password para reintento rápido
       setValue('password', '')
       passInputRef.current?.focus()
     } finally {
@@ -79,7 +63,7 @@ export default function Login() {
           type="email"
           inputMode="email"
           autoComplete="email"
-          className="w-full rounded-md border p-2 focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
@@ -92,7 +76,7 @@ export default function Login() {
             type={showPassword ? 'text' : 'password'}
             placeholder="********"
             autoComplete="current-password"
-            className="w-full rounded-md border p-2 pr-12 focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-md border px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
           />
           <button
             type="button"
@@ -100,9 +84,21 @@ export default function Login() {
             aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             aria-pressed={showPassword ? 'true' : 'false'}
             title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-md p-1.5 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
-            <EyeTurcoIcon className={`w-5 h-5 ${showPassword ? '' : 'opacity-80'}`} />
+            {showPassword ? (
+              // Ojo turco abierto (imagen en public/)
+              <img src="/ojo-turco.jpg" alt="" className="w-5 h-5" />
+            ) : (
+              // Ojo cerrado genérico en SVG
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-gray-600" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zm10 4.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z"
+                />
+                <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
