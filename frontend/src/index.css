@@ -2,7 +2,6 @@
    Tailwind v4 — entrada correcta
    =============================== */
 @import "tailwindcss";
-/* Para que @apply reconozca utilidades en este archivo */
 @reference "tailwindcss";
 
 /* ====== Tu tema (paleta, fuentes, sombras) ====== */
