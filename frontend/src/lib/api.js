@@ -17,7 +17,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    'X-Requested-With': 'XMLHttpRequest', // pistas anti-CSRF clásicas
+    // ❌ quitado: 'X-Requested-With': 'XMLHttpRequest'
   },
   timeout: 15000,
 })
@@ -70,7 +70,7 @@ api.interceptors.response.use(
       }
     }
 
-    // Opcional: puedes manejar 403, 429 o 5xx si te apetece dar mensajes globales
+    // Opcional: puedes manejar 403, 429 o 5xx si quieres dar mensajes globales
 
     return Promise.reject(err)
   }
