@@ -5,16 +5,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'node:path'
 
 export default defineConfig(({ mode }) => {
-  // Lee variables .env* (sin limitar a VITE_)
+  // Carga variables de entorno (no solo VITE_)
   const env = loadEnv(mode, process.cwd(), '')
 
-  // Backend para el proxy de /api durante el dev
-  const target = env.VITE_PROXY_TARGET || 'http://localhost:3000'
+  // Backend para el proxy en dev
+  const target = env.VITE_PROXY_TARGET || 'http://localhost:4000'
   const isHttps = /^https:/i.test(target)
 
   const plugins = [react()]
 
-  // Solo activamos la PWA en producción. En dev no queremos SW cacheando nada.
+  // PWA solo en producción (en dev no queremos SW cacheando nada)
   if (mode === 'production') {
     plugins.push(
       VitePWA({
@@ -45,65 +45,43 @@ export default defineConfig(({ mode }) => {
         workbox: {
           cleanupOutdatedCaches: true,
           runtimeCaching: [
-            // Google Fonts stylesheets
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'google-fonts-stylesheets',
-              },
+              options: { cacheName: 'google-fonts-stylesheets' },
             },
-            // Google Fonts webfonts
             {
               urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'google-fonts-webfonts',
-                expiration: {
-                  maxEntries: 30,
-                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 año
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
+                expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
               },
             },
-            // CDN jsdelivr
             {
               urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'cdn-cache',
-                expiration: {
-                  maxEntries: 20,
-                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
-                },
+                expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 },
               },
             },
-            // HTML documents
             {
               urlPattern: ({ request }) => request.destination === 'document',
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'html-cache',
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24, // 1 día
-                },
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
               },
             },
-            // Scripts y CSS
             {
               urlPattern: ({ request }) =>
-                request.destination === 'script' ||
-                request.destination === 'style',
+                request.destination === 'script' || request.destination === 'style',
               handler: 'StaleWhileRevalidate',
               options: {
                 cacheName: 'static-resources',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
-                },
+                expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 },
               },
             },
           ],
@@ -121,17 +99,13 @@ export default defineConfig(({ mode }) => {
       hmr: { overlay: false },
       proxy: {
         '/api': {
-          target, // http://localhost:3000 o el remoto
+          target,                  // p.ej. http://localhost:4000 o el remoto
           changeOrigin: true,
-          secure: isHttps, // true si target es https con cert válido
-          cookieDomainRewrite: 'localhost',
+          secure: isHttps,         // true si el target https tiene cert válido
+          cookieDomainRewrite: 'localhost', // que la cookie no se pierda en dev
         },
       },
     },
-    // css: {
-    //   postcss: {
-    //     plugins: [require('@tailwindcss/postcss'), require('autoprefixer')],
-    //   },
-    // },
+    // Con Tailwind v4 no necesitas postcss aquí; ya estás usando @import "tailwindcss" en index.css
   }
 })
