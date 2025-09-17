@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext'
+import { LogoutButton } from '@/components/LogoutButton'
 
 const LOGO = '/logo.png'
 
@@ -23,6 +25,8 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const prevY = useRef(0)
   const ticking = useRef(false)
+
+  const { user, loading } = useAuth()
 
   const close = () => setOpen(false)
 
@@ -85,22 +89,35 @@ export default function Header() {
           {/* <Tab to="/terapias">Terapias</Tab> */}
         </nav>
 
-        {/* Derecha: solo Registro / Login (desktop) */}
-        <div className="hidden md:flex justify-self-end items-center">
-          <div className="auth-panel">
-            <Link
-              to="/register"
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100"
-            >
-              Registro
-            </Link>
-            <Link
-              to="/login"
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100"
-            >
-              Inicio de sesión
-            </Link>
-          </div>
+        {/* Derecha (desktop): Auth-aware */}
+        <div className="hidden md:flex justify-self-end items-center gap-3">
+          {!loading && user ? (
+            <>
+              <Link
+                to="/mi-cuenta"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100"
+                title="Ir a mi cuenta"
+              >
+                Hola, {user.name?.split(' ')[0] || 'Usuario'}
+              </Link>
+              <LogoutButton />
+            </>
+          ) : (
+            <>
+              <Link
+                to="/register"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100"
+              >
+                Registro
+              </Link>
+              <Link
+                to="/login"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100"
+              >
+                Inicio de sesión
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Botón hamburguesa (solo móvil) */}
@@ -142,13 +159,40 @@ export default function Header() {
               <Link to="/nosotros" onClick={close} className="tab tab-inactive">Nosotros</Link>
             </nav>
 
-            <div className="mt-4 auth-panel grid gap-2">
-              <Link to="/register" onClick={close} className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100 text-center">
-                Registro
-              </Link>
-              <Link to="/login" onClick={close} className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100 text-center">
-                Inicio de sesión
-              </Link>
+            {/* Panel Auth (móvil) */}
+            <div className="mt-4 grid gap-2">
+              {!loading && user ? (
+                <>
+                  <Link
+                    to="/mi-cuenta"
+                    onClick={close}
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100 text-center"
+                  >
+                    Mi cuenta
+                  </Link>
+                  {/* Botón de logout dentro del drawer */}
+                  <div className="flex justify-center">
+                    <LogoutButton />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/register"
+                    onClick={close}
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100 text-center"
+                  >
+                    Registro
+                  </Link>
+                  <Link
+                    to="/login"
+                    onClick={close}
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-earth-100 text-center"
+                  >
+                    Inicio de sesión
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
