@@ -1,11 +1,12 @@
 // frontend/src/components/LogoutButton.jsx
+import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
 export function LogoutButton() {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const [loading, setLoading] = React.useState(false)
+  const [loading, setLoading] = useState(false)
 
   const onClick = async () => {
     setLoading(true)
