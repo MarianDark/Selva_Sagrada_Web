@@ -109,7 +109,8 @@ exports.verifyEmail = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body
-    const u = await User.findOne({ email })
+    // Pide el hash explícitamente
+    const u = await User.findOne({ email }).select('+passwordHash')
     if (!u) return res.status(401).json({ message: 'Credenciales inválidas' })
 
     const ok = await bcrypt.compare(password, u.passwordHash)
@@ -120,9 +121,14 @@ exports.login = async (req, res, next) => {
     const token = jwt.sign({ id: u._id, role: u.role }, process.env.JWT_SECRET, { expiresIn: '7d' })
     res.cookie(COOKIENAME_SAFE(COOKIE_NAME), token, getCookieOptions())
 
-    res.json({ message: 'Login OK', user: { id: u._id, name: u.name, email: u.email, role: u.role } })
+    // Respuesta sin hash ni datos sensibles
+    res.json({
+      message: 'Login OK',
+      user: { id: u._id, name: u.name, email: u.email, role: u.role }
+    })
   } catch (e) { next(e) }
 }
+
 
 /* LOGOUT */
 exports.logout = (req, res) => {

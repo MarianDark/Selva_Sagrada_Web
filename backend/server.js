@@ -1,5 +1,6 @@
+// backend/server.js
 require('dotenv').config();
-const { randomUUID } = require('crypto'); // <- añade esto
+const { randomUUID } = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -85,11 +86,20 @@ const logger = pino(
     level: process.env.LOG_LEVEL || (isProd ? 'warn' : 'info'),
     redact: {
       paths: [
+        // Cookies y auth headers
         'req.headers.cookie',
         'req.headers.authorization',
         'res.headers["set-cookie"]',
+        // Cuerpos con credenciales o secretos
         'req.body.password',
+        'req.body.newPassword',
+        'req.body.passwordHash',
         'req.body.token',
+        // Queries por si algún iluminado manda cosas sensibles ahí
+        'req.query.password',
+        'req.query.newPassword',
+        'req.query.passwordHash',
+        'req.query.token'
       ],
       censor: '[redacted]',
       remove: true,
@@ -113,8 +123,17 @@ app.use(
       return isProd ? 'silent' : 'info';
     },
     serializers: {
-      req(req) { return { id: req.id, method: req.method, url: req.url, ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress }; },
-      res(res) { return { statusCode: res.statusCode }; },
+      req(req) {
+        return {
+          id: req.id,
+          method: req.method,
+          url: req.url,
+          ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
+        };
+      },
+      res(res) {
+        return { statusCode: res.statusCode };
+      },
     },
   })
 );
