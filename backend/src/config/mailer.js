@@ -7,7 +7,7 @@ const HOST = process.env.SMTP_HOST;
 const USER = process.env.SMTP_USER;
 const PASS = process.env.SMTP_PASS;
 
-// Puerto y secure coherentes (465 = TLS implícito, 587 = STARTTLS)
+/// Puerto y secure coherentes (465 = TLS implícito, 587 = STARTTLS)
 const PORT = Number(process.env.SMTP_PORT || (isProd ? 465 : 587));
 const SECURE = PORT === 465;
 
