@@ -22,8 +22,46 @@ app.use(
   helmet({
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        // Lo básico
+        "default-src": ["'self'"],
+
+        // Scripts: permitimos eval temporalmente y los dominios que usas
+        "script-src": [
+          "'self'",
+          "'unsafe-eval'",              // ← habilita bundles que usan new Function/eval
+          "https://www.google.com",     // reCAPTCHA
+          "https://www.gstatic.com"     // reCAPTCHA
+        ],
+
+        // AJAX/WebSocket
+        "connect-src": [
+          "'self'",
+          process.env.API_PUBLIC_ORIGIN || "https://api.ssselvasagrada.com",
+          "https://www.google.com",
+          "https://www.gstatic.com"
+        ],
+
+        // Imágenes
+        "img-src": ["'self'", "data:", "https://www.google.com", "https://www.gstatic.com"],
+
+        // CSS (Google Fonts requiere 'unsafe-inline' para sus inlines)
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+
+        // Fuentes
+        "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
+
+        // iframes (reCAPTCHA)
+        "frame-src": ["'self'", "https://www.google.com"],
+
+        // Manifiesto PWA y demás
+        "manifest-src": ["'self'"],
+      },
+    },
   })
-);
+)
 
 /* ===== CORS con credenciales ===== */
 const RAW_ORIGINS = Array.from(
