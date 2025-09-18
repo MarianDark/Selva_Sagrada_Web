@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 const rateLimit = require("express-rate-limit");
 const connect = require("./src/config/db");
 const pino = require("pino");
@@ -90,13 +91,12 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  // Refleja lo que pida el navegador en el preflight (para que no te bloquee headers nuevos)
   allowedHeaders(req, cb) {
     const reqHeaders = req.header("Access-Control-Request-Headers");
     cb(
       null,
       reqHeaders ||
-        "Content-Type, Authorization, X-Requested-With, X-CSRF-Token"
+        "Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-Token"
     );
   },
   exposedHeaders: ["Set-Cookie"],
@@ -115,6 +115,27 @@ app.use((req, res, next) => {
 /* Parsers */
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
+
+/* ===== Sesión con cookies seguras (para subdominios .ssselvasagrada.com) ===== */
+const COOKIE_DOMAIN = isProd ? ".ssselvasagrada.com" : undefined;
+const SESSION_SECRET =
+  process.env.SESSION_SECRET || "cambia-ESTO-por-un-secreto-fuerte";
+
+app.use(
+  session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    proxy: true, // respetar secure detrás de proxy
+    cookie: {
+      secure: isProd,          // exige HTTPS en prod
+      httpOnly: true,
+      sameSite: isProd ? "none" : "lax",
+      domain: COOKIE_DOMAIN,   // comparte cookie entre api. y raíz en prod
+      maxAge: 1000 * 60 * 60 * 24, // 1 día
+    },
+  })
+);
 
 /* Rate limits */
 const limiter = rateLimit({

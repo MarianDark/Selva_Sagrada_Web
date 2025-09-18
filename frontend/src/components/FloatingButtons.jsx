@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const WA_PHONE = '34600123456' // solo dígitos, sin +
+const WA_PHONE = '34669050243' // solo dígitos, sin +
 
 function ChevronUp() {
   return (

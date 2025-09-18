@@ -15,13 +15,13 @@ export default function Footer() {
 
       <div className="md:text-right">
         <ul className="text-sm space-y-2 px-4 lg:px-8 max-w-7xl mx-auto">
-          <li>Email: <a href="mailto:contacto@selvasagrada.com" className="hover:underline">contacto@selvasagrada.com</a></li>
-          <li>Teléfono: <a href="tel:+34600123456" className="hover:underline">+34 600 123 456</a></li>
+          <li>Email: <a href="mailto:contacto@ssselvasagrada.com" className="hover:underline">contacto@ssselvasagrada.com</a></li>
+          <li>Teléfono: <a href="tel:+34669050243" className="hover:underline">+34 669 050 243</a></li>
           <li>Dirección: Málaga, España</li>
         </ul>
       </div>
 
-      <div className="border-t border-white/10" />
+      <div className="border-t border-white/100" />
 
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-5 text-xs text-zinc-300 flex flex-col items-center gap-3">
         <p>© {new Date().getFullYear()} Selva Sagrada. Todos los derechos reservados.</p>
