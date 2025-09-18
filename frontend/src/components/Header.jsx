@@ -22,7 +22,7 @@ function Tab({ to, children }) {
                 'after:bg-gradient-to-r after:from-transparent after:via-emerald-500/70 after:to-transparent',
               ].join(' ')
             : [
-                'text-jungle-800/80 hover:text-jungle-900',
+                'text-emerald-800/80 hover:text-emerald-900',
                 'hover:bg-emerald-50/70 dark:hover:bg-emerald-900/10',
               ].join(' '),
         ].join(' ')
@@ -79,8 +79,8 @@ export default function Header() {
         'sticky top-0 z-50 w-full border-b',
         'transition-transform duration-300 will-change-transform',
         hidden ? '-translate-y-full' : 'translate-y-0',
-        // Glass + niebla mística
-        'bg-white/85 dark:bg-zinc-900/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/65',
+        // Glass + niebla
+        'bg-white/85 dark:bg-zinc-900/70 backdrop-blur-xl',
         'border-emerald-900/5 dark:border-emerald-400/10',
         scrolled
           ? 'shadow-[0_12px_28px_rgba(16,24,16,0.14)]'
@@ -117,7 +117,7 @@ export default function Header() {
               loading="eager"
               decoding="async"
             />
-            <span className="hidden sm:inline text-base font-semibold tracking-wide text-jungle-900 dark:text-emerald-100">
+            <span className="hidden sm:inline text-base font-semibold tracking-wide text-emerald-900 dark:text-emerald-100">
               Selva Sagrada
             </span>
           </Link>
@@ -136,7 +136,7 @@ export default function Header() {
             <>
               <Link
                 to="/mi-cuenta"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
                 title="Ir a mi cuenta"
               >
                 Hola, {user.name?.split(' ')[0] || 'Usuario'}
@@ -147,13 +147,13 @@ export default function Header() {
             <>
               <Link
                 to="/register"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
               >
                 Registro
               </Link>
               <Link
                 to="/login"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-jungle-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
               >
                 Inicio de sesión
               </Link>
@@ -206,7 +206,7 @@ export default function Header() {
                 <div className="flex items-center justify-between">
                   <Link to="/" onClick={close} className="flex items-center gap-2">
                     <img src={LOGO} alt="Selva Sagrada" className="h-7 w-7 rounded-lg ring-1 ring-emerald-600/15" />
-                    <span className="text-jungle-900 font-semibold">Selva Sagrada</span>
+                    <span className="text-emerald-900 font-semibold">Selva Sagrada</span>
                   </Link>
                   <button
                     className="p-2 rounded-lg hover:bg-emerald-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
@@ -223,9 +223,9 @@ export default function Header() {
             </div>
 
             <nav className="mt-3 flex flex-col gap-2">
-              <Link to="/" onClick={close} className="px-3 py-2 rounded-lg text-base font-medium text-jungle-900 hover:bg-emerald-50/70">Inicio</Link>
-              <Link to="/nosotros" onClick={close} className="px-3 py-2 rounded-lg text-base font-medium text-jungle-900 hover:bg-emerald-50/70">Nosotros</Link>
-              {/* <Link to="/terapias" onClick={close} className="px-3 py-2 rounded-lg text-base font-medium text-jungle-900 hover:bg-emerald-50/70">Terapias</Link> */}
+              <Tab to="/">Inicio</Tab>
+              <Tab to="/nosotros">Nosotros</Tab>
+              {/* <Tab to="/terapias">Terapias</Tab> */}
             </nav>
 
             {/* Panel Auth (móvil) */}
@@ -235,7 +235,7 @@ export default function Header() {
                   <Link
                     to="/mi-cuenta"
                     onClick={close}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-emerald-50/70 text-center"
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-900 hover:bg-emerald-50/70 text-center"
                   >
                     Mi cuenta
                   </Link>
@@ -248,14 +248,14 @@ export default function Header() {
                   <Link
                     to="/register"
                     onClick={close}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-emerald-50/70 text-center"
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-900 hover:bg-emerald-50/70 text-center"
                   >
                     Registro
                   </Link>
                   <Link
                     to="/login"
                     onClick={close}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-jungle-900 hover:bg-emerald-50/70 text-center"
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-900 hover:bg-emerald-50/70 text-center"
                   >
                     Inicio de sesión
                   </Link>
