@@ -1,4 +1,3 @@
-// frontend/src/pages/Login.jsx
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -10,13 +9,13 @@ export default function Login() {
     register,
     handleSubmit,
     setValue,
-    setFocus,           // ← usa esto en vez de ref manual
+    setFocus,
     formState: { isSubmitting }
   } = useForm();
 
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const passEl = useRef(null); // opcional, pero lo fusionamos bien
+  const passEl = useRef(null);
 
   const { loginSuccess } = useAuth();
   const navigate = useNavigate();
@@ -32,7 +31,6 @@ export default function Login() {
 
       await loginSuccess();
 
-      // higiene
       setValue('password', '');
       passEl.current?.blur?.();
 
@@ -42,12 +40,10 @@ export default function Login() {
       const msg = e?.response?.data?.message || e?.message || 'Error iniciando sesión';
       setErrorMsg(msg);
       setValue('password', '');
-      // enfoca usando RHF para no romper el registro
       setTimeout(() => setFocus('password'), 0);
     }
   };
 
-  // fusionamos refs: mantenemos la de RHF y guardamos el elemento en passEl
   const passwordReg = register('password', { required: true });
 
   return (
@@ -77,8 +73,8 @@ export default function Login() {
           <input
             {...passwordReg}
             ref={(el) => {
-              passwordReg.ref(el);   // ← mantiene RHF
-              passEl.current = el;   // ← y tú sigues teniendo la ref
+              passwordReg.ref(el);
+              passEl.current = el;
             }}
             type={showPassword ? 'text' : 'password'}
             placeholder="********"

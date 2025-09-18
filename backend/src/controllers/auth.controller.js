@@ -1,3 +1,4 @@
+// backend/src/controllers/auth.controller.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body } = require('express-validator');
@@ -16,29 +17,25 @@ const CLIENT_URL      = process.env.CLIENT_URL || 'https://www.ssselvasagrada.co
 const JWT_SECRET      = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-  // No tiramos el server, pero te lo dejo clarito en logs
-  console.warn('[AUTH] JWT_SECRET está vacío. Generar tokens sin secreto es una invitación al desastre.');
+  console.warn('[AUTH] JWT_SECRET está vacío. Solo para dev. Configura JWT_SECRET en prod.');
 }
 
 /* ========= Cookie helpers ========= */
 function cookieOptions() {
-  // Para subdominios (www/api) somos "same-site". Lax es suficiente.
   const base = { httpOnly: true, path: '/', maxAge: COOKIE_MAX_AGE };
   if (isProd) {
-    base.secure = true;        // HTTPS obligatorio en prod
-    base.sameSite = 'lax';     // suficiente para subdominios
+    base.secure = true;
+    base.sameSite = 'lax';
     if (COOKIE_DOMAIN) base.domain = COOKIE_DOMAIN;
   } else {
     base.secure = false;
     base.sameSite = 'lax';
-    // domain omitido en dev (localhost no acepta domain arbitrario)
   }
   return base;
 }
 
 function clearCookieOptions() {
   const opts = cookieOptions();
-  // Para clearCookie es mejor no enviar maxAge
   const { maxAge, ...rest } = opts;
   return rest;
 }
@@ -81,7 +78,7 @@ exports.register = [
         userId: user._id,
         token,
         type: 'verify',
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       });
 
       const verifyUrl = `${CLIENT_URL.replace(/\/+$/, '')}/verify-email?token=${token}`;
@@ -139,7 +136,6 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Pide el hash explícitamente
     const u = await User.findOne({ email }).select('+passwordHash');
     if (!u) return res.status(401).json({ message: 'Credenciales inválidas' });
 
@@ -172,7 +168,6 @@ exports.logout = (req, res) => {
 /* ========= ME ========= */
 exports.me = async (req, res, next) => {
   try {
-    // req.user lo debe poner tu middleware auth() tras verificar el JWT
     const u = await User.findById(req.user.id).select('_id name email role isEmailVerified').lean();
     if (!u) return res.sendStatus(404);
     return res.json({
@@ -192,7 +187,6 @@ exports.forgotPassword = async (req, res, next) => {
     if (!email) return res.status(400).json({ message: 'Email requerido' });
 
     const u = await User.findOne({ email });
-    // Respuesta indistinta para no filtrar usuarios
     if (!u) return res.json({ message: 'Si el email existe, enviaremos instrucciones' });
 
     const token = crypto.randomBytes(32).toString('hex');
@@ -200,7 +194,7 @@ exports.forgotPassword = async (req, res, next) => {
       userId: u._id,
       token,
       type: 'reset',
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1h
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000)
     });
 
     const resetUrl = `${CLIENT_URL.replace(/\/+$/, '')}/reset-password?token=${token}`;
@@ -223,7 +217,8 @@ exports.forgotPassword = async (req, res, next) => {
 };
 
 exports.resetPassword = [
-  ...rulesReset,
+  strongPassword,
+  body('token').isString().notEmpty().withMessage('Token requerido'),
   validate,
   async (req, res, next) => {
     try {

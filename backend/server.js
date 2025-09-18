@@ -49,14 +49,13 @@ app.use(
 );
 
 /* ===== CORS con credenciales ===== */
-// ★ Lista cruda desde env + dominios web explícitos
 const RAW_ORIGINS = Array.from(
   new Set(
     [
       process.env.CLIENT_URL,
       ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
-      'https://www.ssselvasagrada.com',   // ★ añadido
-      'https://ssselvasagrada.com',       // ★ añadido (apex)
+      'https://www.ssselvasagrada.com',
+      'https://ssselvasagrada.com',
       !isProd && 'http://localhost:5173',
       process.env.ALLOW_RENDER_ORIGIN === '1' && 'https://selva-sagrada-web.onrender.com',
     ]
@@ -65,7 +64,6 @@ const RAW_ORIGINS = Array.from(
   )
 );
 
-// Normalizamos a .origin para evitar paths fantasma
 const ALLOWED_ORIGINS = RAW_ORIGINS
   .map(u => {
     try { return new URL(u).origin; } catch { return null; }
@@ -79,15 +77,23 @@ const corsOptions = {
     return cb(ok ? null : new Error(`Not allowed by CORS: ${origin}`), ok);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  // ★ Añadimos cabeceras típicas de XHR/CSRF
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  // Refleja lo que pida el navegador en el preflight (para que no te bloquee headers nuevos)
+  allowedHeaders(req, cb) {
+    const reqHeaders = req.header('Access-Control-Request-Headers');
+    cb(null, reqHeaders || 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
+  },
+  exposedHeaders: ['Set-Cookie'],
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-// ★ Preflight con las mismas opciones (no genérico suelto)
 app.options('*', cors(corsOptions));
+// Evita caches raros en proxies intermedios
+app.use((req, res, next) => {
+  res.header('Vary', 'Origin, Access-Control-Request-Headers');
+  next();
+});
 
 /* Parsers */
 app.use(express.json({ limit: '1mb' }));
@@ -134,7 +140,7 @@ const logger = pino(
   transport
 );
 
-const IGNORED_ROUTES = ['/api/health']; // ★ quito /api/auth/me del ignore para cazar 401
+const IGNORED_ROUTES = ['/api/health'];
 
 app.use(
   pinoHttp({

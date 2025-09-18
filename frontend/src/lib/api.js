@@ -1,44 +1,31 @@
+// frontend/src/lib/api.js
 import axios from 'axios';
 
 /* ========= Detección de entorno ========= */
 const isProd = import.meta.env.MODE === 'production';
 
-/* ========= Normalización de baseURL =========
-   - En prod: si VITE_API_URL existe (p. ej. https://api.ssselvasagrada.com), lo usamos y le añadimos /api.
-   - En dev: usamos /api para que el proxy de Vite lo redirija al backend.
-   - Evitamos dobles /api y barras repetidas.
-*/
+/* ========= Normalización de baseURL ========= */
 function buildBaseURL() {
   const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
-  if (isProd && envUrl) {
-    // Garantiza que termina en /api
-    return `${envUrl}/api`;
-  }
-  // Dev o prod sin VITE_API_URL: relativo, asumiendo proxy o mismo origin
+  if (isProd && envUrl) return `${envUrl}/api`;
   return '/api';
 }
-
 const baseURL = buildBaseURL();
 
 /* ========= Instancia ========= */
 export const api = axios.create({
   baseURL,
-  withCredentials: true, // cookies httpOnly via CORS
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    // Algunos setups de CSRF/seguridad esperan esto para XHR
-    'X-Requested-With': 'XMLHttpRequest',
+    // Quitamos X-Requested-With para no detonar CORS
   },
   timeout: 15000,
 });
 
-/* ========= Interceptor de request =========
-   - Si algún día usas Bearer (localStorage/sessionStorage), se inyecta aquí.
-   - No logueamos payloads sensibles, gracias.
-*/
+/* ========= Interceptor de request ========= */
 api.interceptors.request.use((config) => {
-  // Optativo: Authorization Bearer si lo usas en paralelo a cookies
   const bearer =
     typeof window !== 'undefined'
       ? window.localStorage?.getItem('access_token') || window.sessionStorage?.getItem('access_token')
@@ -48,8 +35,6 @@ api.interceptors.request.use((config) => {
     config.headers = { ...config.headers, Authorization: `Bearer ${bearer}` };
   }
 
-  // Defensa contra dobles /api en llamadas mal formadas
-  // Ej: api.get('/auth/me') => OK; api.get('auth/me') => también OK
   if (config.url && config.url.startsWith('//')) {
     config.url = config.url.replace(/^\/+/, '/');
   }
@@ -64,10 +49,10 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     const status = err?.response?.status;
-    const method = err?.config?.method?.toUpperCase?.();
-    const url = err?.config?.url;
 
     if (import.meta.env.DEV) {
+      const method = err?.config?.method?.toUpperCase?.();
+      const url = err?.config?.url;
       console.error('API error:', {
         method,
         url,
@@ -81,7 +66,6 @@ api.interceptors.response.use(
       });
     }
 
-    // 401: no autenticado o sesión expirada
     if (status === 401) {
       const { pathname, search } = window.location;
       const current = `${pathname}${search}`;
@@ -94,8 +78,6 @@ api.interceptors.response.use(
         window.location.href = `/login?next=${encodeURIComponent(current)}`;
       }
     }
-
-    // Puedes añadir aquí manejo global para 403/429/5xx si te apetece sufrir más.
 
     return Promise.reject(err);
   }
