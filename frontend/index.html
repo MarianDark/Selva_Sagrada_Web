@@ -2,40 +2,36 @@
 <html lang="es" dir="ltr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Selva Sagrada</title>
 
     <!-- SEO básico -->
-    <meta
-      name="description"
-      content="Selva Sagrada - Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida."
-    />
-    <link rel="canonical" href="https://tudominio.com/" />
+    <meta name="description" content="Selva Sagrada - Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida." />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <link rel="canonical" href="https://www.selvasagrada.com/" />
 
     <!-- Theming -->
-    <meta name="theme-color" content="#2e8f6a" />
     <meta name="color-scheme" content="light dark" />
+    <!-- theme-color reactivo -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#2e8f6a" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e3b2d" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="Selva Sagrada" />
-    <meta
-      property="og:description"
-      content="Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida."
-    />
-    <meta property="og:image" content="/poster.jpg" />
+    <meta property="og:description" content="Terapias holísticas, bienestar y retiros. Reserva tu sesión de forma fácil y rápida." />
+    <meta property="og:image" content="https://www.selvasagrada.com/poster.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://tudominio.com/" />
+    <meta property="og:url" content="https://www.selvasagrada.com/" />
     <meta property="og:site_name" content="Selva Sagrada" />
     <meta property="og:locale" content="es_ES" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Selva Sagrada" />
-    <meta
-      name="twitter:description"
-      content="Terapias holísticas, bienestar y retiros."
-    />
-    <meta name="twitter:image" content="/poster.jpg" />
+    <meta name="twitter:description" content="Terapias holísticas, bienestar y retiros." />
+    <meta name="twitter:image" content="https://www.selvasagrada.com/poster.jpg" />
 
     <!-- Favicons & Manifest -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -43,19 +39,38 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Selva Sagrada" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- Si usas vite-plugin-pwa, puede inyectar esto solo. Si no, déjalo: -->
     <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Tipografías -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@600..800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@600..800&display=swap" rel="stylesheet" />
 
-    <!-- Opcionales útiles en mobile -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
+    <!-- Preload hero (opcional, si existe) -->
+    <link rel="preload" as="image" href="/poster.jpg" fetchpriority="high" imagesrcset="/poster.jpg 1200w" imagesizes="(max-width: 768px) 100vw, 1200px" />
+
+    <!-- Seguridad ligera (si vas a poner CSP, hazlo en cabecera del servidor) -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- JSON-LD mínimo -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": ["Organization","WebSite"],
+      "name": "Selva Sagrada",
+      "url": "https://www.selvasagrada.com/",
+      "logo": "https://www.selvasagrada.com/apple-touch-icon.png",
+      "sameAs": [],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.selvasagrada.com/buscar?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
 
   <body class="antialiased bg-white text-zinc-800">
