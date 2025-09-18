@@ -4,7 +4,7 @@
 @import "tailwindcss";
 @reference "tailwindcss";
 
-/* ====== Tu tema (paleta, fuentes, sombras) ====== */
+/* ====== Tema (paleta, fuentes, sombras) ====== */
 @theme {
   /* Paleta jungle */
   --color-jungle-50:  #ecf8f3;
@@ -30,7 +30,7 @@
   --color-earth-800: #5d3c20;
   --color-earth-900: #432c17;
 
-  /* Sol, por si te da por iluminar botones */
+  /* Sol para acentos tibios */
   --color-sun-400: #f0c85a;
 
   /* Fuentes */
@@ -42,7 +42,7 @@
   --shadow-jungle-sm: 0 6px 18px rgba(16, 24, 16, 0.10);
 }
 
-/* ====== Keyframes locales ====== */
+/* ====== Keyframes ====== */
 @keyframes fadeUp {
   0%   { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -70,8 +70,49 @@
   body { @apply font-sans text-zinc-800 bg-white antialiased; }
 }
 
-/* ====== Utilidad de sombra (fallback) ====== */
-.shadow-soft { box-shadow: 0 8px 30px rgba(16, 24, 16, .10); }
+/* ====== Utilities personalizadas ====== */
+@layer utilities {
+  /* Sombras suaves tipo “liana” */
+  .shadow-vines {
+    box-shadow:
+      0 1px 0 rgba(16, 185, 129, 0.15) inset,
+      0 -1px 0 rgba(5, 150, 105, 0.12) inset,
+      0 12px 28px rgba(16, 24, 16, 0.14);
+  }
+  .shadow-vines-light {
+    box-shadow:
+      0 1px 0 rgba(16, 185, 129, 0.12) inset,
+      0 -1px 0 rgba(5, 150, 105, 0.10) inset,
+      0 6px 18px rgba(16, 24, 16, 0.10);
+  }
+
+  /* Patrón sutil de hojas para fondos */
+  .leafy-bg {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(16,185,129,0.15) 1px, transparent 1px),
+      radial-gradient(circle at 80% 30%, rgba(52,211,153,0.12) 1px, transparent 1px),
+      radial-gradient(circle at 50% 70%, rgba(5,150,105,0.10) 1px, transparent 1px);
+    background-size: 22px 22px, 26px 26px, 30px 30px;
+  }
+
+  /* Fallback sombra genérica */
+  .shadow-soft { box-shadow: 0 8px 30px rgba(16, 24, 16, .10); }
+
+  /* Entradas sutiles */
+  .enter-up { animation: fadeUp .6s ease-out both; }
+  .bounce-soft {
+    animation: ss-bounce 1.8s cubic-bezier(.16,.84,.44,1) infinite;
+    will-change: transform;
+    transform-origin: center;
+  }
+
+  /* Línea decorativa footer */
+  .footer-line {
+    background: linear-gradient(90deg, #b67c3f 0%, #f0c85a 35%, #49ae86 70%, #15533f 100%);
+    height: 1px;
+    opacity: .35;
+  }
+}
 
 /* ====== Componentes reutilizables ====== */
 @layer components {
@@ -94,24 +135,9 @@
 
   /* Panel derecho del header (Registro/Login) */
   .auth-panel { @apply flex items-center gap-1 rounded-xl border border-jungle-200 bg-white shadow-sm p-1.5; }
-
-  /* Entradas sutiles */
-  .enter-up { animation: fadeUp .6s ease-out both; }
-  .bounce-soft {
-    animation: ss-bounce 1.8s cubic-bezier(.16,.84,.44,1) infinite;
-    will-change: transform;
-    transform-origin: center;
-  }
 }
 
 /* Respeta usuarios con reducción de movimiento */
 @media (prefers-reduced-motion: reduce) {
   .bounce-soft { animation: none !important; }
-}
-
-/* ====== Footer: línea decorativa ====== */
-.footer-line {
-  background: linear-gradient(90deg, #b67c3f 0%, #f0c85a 35%, #49ae86 70%, #15533f 100%);
-  height: 1px;
-  opacity: .35;
 }

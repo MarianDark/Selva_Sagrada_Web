@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ mode }) => {
   // Carga variables de entorno (no solo VITE_)
@@ -12,9 +13,12 @@ export default defineConfig(({ mode }) => {
   const target = env.VITE_PROXY_TARGET || 'http://localhost:4000'
   const isHttps = /^https:/i.test(target)
 
-  const plugins = [react()]
+  const plugins = [
+    tailwindcss(),   // ← Tailwind v4 via Vite plugin (sin CLI)
+    react(),
+  ]
 
-  // PWA solo en producción (en dev no queremos SW cacheando nada)
+  // PWA solo en producción
   if (mode === 'production') {
     plugins.push(
       VitePWA({
@@ -99,13 +103,14 @@ export default defineConfig(({ mode }) => {
       hmr: { overlay: false },
       proxy: {
         '/api': {
-          target,                  // p.ej. http://localhost:4000 o el remoto
+          target,
           changeOrigin: true,
-          secure: isHttps,         // true si el target https tiene cert válido
-          cookieDomainRewrite: 'localhost', // que la cookie no se pierda en dev
+          secure: isHttps,
+          cookieDomainRewrite: 'localhost',
         },
       },
     },
-    // Con Tailwind v4 no necesitas postcss aquí; ya estás usando @import "tailwindcss" en index.css
+    // Con Tailwind v4 no necesitas postcss aquí; usas @import "tailwindcss" en index.css
+    css: { devSourcemap: true }, // opcional, útil en dev
   }
 })
