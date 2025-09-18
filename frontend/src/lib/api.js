@@ -1,10 +1,7 @@
-// frontend/src/lib/api.js
 import axios from 'axios';
 
-/* ========= Detección de entorno ========= */
 const isProd = import.meta.env.MODE === 'production';
 
-/* ========= Normalización de baseURL ========= */
 function buildBaseURL() {
   const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
   if (isProd && envUrl) return `${envUrl}/api`;
@@ -12,19 +9,16 @@ function buildBaseURL() {
 }
 const baseURL = buildBaseURL();
 
-/* ========= Instancia ========= */
 export const api = axios.create({
   baseURL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    // Quitamos X-Requested-With para no detonar CORS
   },
   timeout: 15000,
 });
 
-/* ========= Interceptor de request ========= */
 api.interceptors.request.use((config) => {
   const bearer =
     typeof window !== 'undefined'
@@ -42,7 +36,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/* ========= Interceptor de respuestas / errores ========= */
 let redirecting = false;
 
 api.interceptors.response.use(

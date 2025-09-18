@@ -6,25 +6,23 @@ import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ mode }) => {
-  // Carga variables de entorno (no solo VITE_)
   const env = loadEnv(mode, process.cwd(), '')
-
-  // Backend para el proxy en dev
-  const target = env.VITE_PROXY_TARGET || 'http://localhost:4000'
-  const isHttps = /^https:/i.test(target)
+  const target = (env.VITE_PROXY_TARGET || 'http://localhost:4000').trim()
 
   const plugins = [
-    tailwindcss(),   // ← Tailwind v4 via Vite plugin (sin CLI)
+    tailwindcss(), // Tailwind v4 via plugin
     react(),
   ]
 
-  // PWA solo en producción
   if (mode === 'production') {
     plugins.push(
       VitePWA({
         registerType: 'autoUpdate',
+        manifestFilename: 'site.webmanifest',
         includeAssets: [
           'favicon.ico',
+          'favicon-96x96.png',
+          'favicon.svg',
           'apple-touch-icon.png',
           'logo-192.png',
           'logo-512.png',
@@ -105,12 +103,11 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target,
           changeOrigin: true,
-          secure: isHttps,
+          secure: false, // en dev no forzamos certificados válidos
           cookieDomainRewrite: 'localhost',
         },
       },
     },
-    // Con Tailwind v4 no necesitas postcss aquí; usas @import "tailwindcss" en index.css
-    css: { devSourcemap: true }, // opcional, útil en dev
+    css: { devSourcemap: true },
   }
 })

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { api } from '../../lib/api'
+import { Link } from 'react-router-dom'
+import { api } from '@/lib/api'
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null)
@@ -7,24 +8,27 @@ export default function UserDashboard() {
   const [state, setState] = useState({ loading: true, error: '' })
 
   useEffect(() => {
-    const fetchData = async () => {
+    const controller = new AbortController()
+
+    ;(async () => {
       try {
-        // Datos del usuario
-        const meRes = await api.get('/auth/me')
-        setUser(meRes.data)
-
-        // Reservas
-        const resBooking = await api.get('/booking/me')
-        setBooking(resBooking.data)
-
+        setState({ loading: true, error: '' })
+        const [meRes, resBooking] = await Promise.all([
+          api.get('/auth/me', { signal: controller.signal }),
+          api.get('/booking/me', { signal: controller.signal }),
+        ])
+        setUser(meRes.data || null)
+        setBooking(Array.isArray(resBooking.data) ? resBooking.data : [])
         setState({ loading: false, error: '' })
       } catch (e) {
+        if (controller.signal.aborted) return
         console.error('Error cargando dashboard', e)
         const msg = e?.response?.data?.message || 'No se pudo cargar tu panel'
         setState({ loading: false, error: msg })
       }
-    }
-    fetchData()
+    })()
+
+    return () => controller.abort()
   }, [])
 
   if (state.loading) return <p className="p-6">Cargando tu panel...</p>
@@ -33,7 +37,7 @@ export default function UserDashboard() {
     return (
       <div className="p-6">
         <p className="text-red-600">{state.error}</p>
-        <a href="/login" className="text-blue-600 underline">Inicia sesión</a>
+        <Link to="/login" className="text-emerald-700 underline">Inicia sesión</Link>
       </div>
     )
   }
@@ -46,8 +50,8 @@ export default function UserDashboard() {
       {user && (
         <section className="bg-zinc-50 border rounded-lg p-4">
           <h2 className="text-lg font-medium mb-2">Mis datos</h2>
-          <p><b>Nombre:</b> {user.name}</p>
-          <p><b>Email:</b> {user.email}</p>
+          <p><b>Nombre:</b> {user.name || '—'}</p>
+          <p><b>Email:</b> {user.email || '—'}</p>
         </section>
       )}
 
@@ -61,31 +65,35 @@ export default function UserDashboard() {
             <table className="min-w-full text-sm border">
               <thead className="bg-zinc-100">
                 <tr>
-                  <th className="px-3 py-2 border">Servicio</th>
-                  <th className="px-3 py-2 border">Inicio</th>
-                  <th className="px-3 py-2 border">Fin</th>
-                  <th className="px-3 py-2 border">Estado</th>
+                  <th className="px-3 py-2 border text-left">Servicio</th>
+                  <th className="px-3 py-2 border text-left">Inicio</th>
+                  <th className="px-3 py-2 border text-left">Fin</th>
+                  <th className="px-3 py-2 border text-left">Estado</th>
                 </tr>
               </thead>
               <tbody>
                 {booking.map((b) => (
-                  <tr key={b._id} className="border-t">
-                    <td className="px-3 py-2">{b.service}</td>
+                  <tr key={b._id || `${b.start}-${b.service}`} className="border-t">
+                    <td className="px-3 py-2">{b.service || '—'}</td>
                     <td className="px-3 py-2">
-                      {new Date(b.start).toLocaleString('es-ES', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                        timeZone: 'Europe/Madrid',
-                      })}
+                      {b.start
+                        ? new Date(b.start).toLocaleString('es-ES', {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                            timeZone: 'Europe/Madrid',
+                          })
+                        : '—'}
                     </td>
                     <td className="px-3 py-2">
-                      {new Date(b.end).toLocaleString('es-ES', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                        timeZone: 'Europe/Madrid',
-                      })}
+                      {b.end
+                        ? new Date(b.end).toLocaleString('es-ES', {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                            timeZone: 'Europe/Madrid',
+                          })
+                        : '—'}
                     </td>
-                    <td className="px-3 py-2 capitalize">{b.status}</td>
+                    <td className="px-3 py-2 capitalize">{b.status || 'pendiente'}</td>
                   </tr>
                 ))}
               </tbody>

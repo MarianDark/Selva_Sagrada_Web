@@ -3,22 +3,21 @@ import { AuthProvider } from './context/AuthContext'
 import RootLayout from './layouts/RootLayout'
 import DashboardLayout from './layouts/DashboardLayout'
 
-// Páginas principales
 import Home from './pages/Home'
 import ReservaCita from './pages/ReservaCita'
+import Nosotros from './pages/Nosotros'
+import LegalPrivacidad from './pages/Legal/Privacidad'
+import LegalAviso from './pages/Legal/AvisoLegal'
 
-// Autenticación
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import ForgotPassword from './pages/Auth/ForgotPassword'
 import ResetPassword from './pages/Auth/ResetPassword'
 import VerifyEmail from './pages/Auth/VerifyEmail'
 
-// Dashboards
 import UserDashboard from './pages/Dashboard/UserDashboard'
 import AdminDashboard from './pages/Dashboard/AdminDashboard'
 
-// Utilidades
 import ProtectedRoute from './components/ProtectedRoute'
 import NotFound from './pages/NotFound'
 
@@ -26,20 +25,19 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Layout principal */}
         <Route element={<RootLayout />}>
-          {/* Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/reservas" element={<ReservaCita />} />
+          <Route path="/nosotros" element={<Nosotros />} />
+          <Route path="/legal/privacidad" element={<LegalPrivacidad />} />
+          <Route path="/legal/aviso-legal" element={<LegalAviso />} />
 
-          {/* Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
 
-          {/* Zona de dashboards */}
           <Route element={<DashboardLayout />}>
             <Route
               path="/mi-cuenta"
@@ -59,7 +57,6 @@ export default function App() {
             />
           </Route>
 
-          {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

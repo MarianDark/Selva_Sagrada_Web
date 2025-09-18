@@ -41,10 +41,8 @@ export default function Header() {
   const ticking = useRef(false)
 
   const { user, loading } = useAuth()
-
   const close = () => setOpen(false)
 
-  // Auto-ocultar en mobile: al bajar oculta, al subir muestra
   useEffect(() => {
     prevY.current = window.scrollY
     const onScroll = () => {
@@ -79,15 +77,11 @@ export default function Header() {
         'sticky top-0 z-50 w-full border-b',
         'transition-transform duration-300 will-change-transform',
         hidden ? '-translate-y-full' : 'translate-y-0',
-        // Glass + niebla
         'bg-white/85 dark:bg-zinc-900/70 backdrop-blur-xl',
         'border-emerald-900/5 dark:border-emerald-400/10',
-        scrolled
-          ? 'shadow-[0_12px_28px_rgba(16,24,16,0.14)]'
-          : 'shadow-[0_6px_18px_rgba(16,24,16,0.10)]',
+        scrolled ? 'shadow-[0_12px_28px_rgba(16,24,16,0.14)]' : 'shadow-[0_6px_18px_rgba(16,24,16,0.10)]',
       ].join(' ')}
     >
-      {/* Aura mística detrás del header (solo al hacer scroll) */}
       <div
         aria-hidden
         className={[
@@ -96,18 +90,13 @@ export default function Header() {
           'transition-opacity duration-300',
         ].join(' ')}
         style={{
-          maskImage:
-            'radial-gradient(120%_80% at 50% 0%, black 40%, transparent 75%)',
-          WebkitMaskImage:
-            'radial-gradient(120%_80% at 50% 0%, black 40%, transparent 75%)',
-          background:
-            'radial-gradient(1200px 200px at 50% 0%, rgba(16,185,129,0.10), rgba(0,0,0,0))',
+          maskImage: 'radial-gradient(120% 80% at 50% 0%, black 40%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(120% 80% at 50% 0%, black 40%, transparent 75%)',
+          background: 'radial-gradient(1200px 200px at 50% 0%, rgba(16,185,129,0.10), rgba(0,0,0,0))',
         }}
       />
 
-      {/* Contenido principal */}
       <div className="mx-auto max-w-7xl px-4 lg:px-8 py-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        {/* Izquierda: logo + marca */}
         <div className="justify-self-start flex items-center gap-3">
           <Link to="/" className="inline-flex items-center gap-3 no-underline group">
             <img
@@ -123,14 +112,11 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Centro: pestañas (desktop) */}
         <nav className="hidden md:flex justify-self-center items-center gap-1.5">
           <Tab to="/">Inicio</Tab>
           <Tab to="/nosotros">Nosotros</Tab>
-          {/* <Tab to="/terapias">Terapias</Tab> */}
         </nav>
 
-        {/* Derecha (desktop): Auth-aware */}
         <div className="hidden md:flex justify-self-end items-center gap-3">
           {!loading && user ? (
             <>
@@ -145,23 +131,12 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link
-                to="/register"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
-              >
-                Registro
-              </Link>
-              <Link
-                to="/login"
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20"
-              >
-                Inicio de sesión
-              </Link>
+              <Link to="/register" className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20">Registro</Link>
+              <Link to="/login" className="px-3 py-1.5 rounded-lg text-sm font-medium text-emerald-900 dark:text-emerald-100 hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20">Inicio de sesión</Link>
             </>
           )}
         </div>
 
-        {/* Botón hamburguesa (solo móvil) */}
         <div className="md:hidden justify-self-end flex items-center">
           <button
             onClick={() => setOpen(true)}
@@ -177,7 +152,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Drawer móvil */}
       {open && (
         <div className="md:hidden fixed inset-0 z-[60]">
           <div className="absolute inset-0 bg-black/40" onClick={close} />
@@ -192,7 +166,6 @@ export default function Header() {
             aria-label="Menú de navegación"
           >
             <div className="relative overflow-hidden rounded-xl border border-emerald-900/10">
-              {/* patrón sutil tipo hojas */}
               <div
                 aria-hidden
                 className="absolute inset-0 opacity-[0.08]"
@@ -225,10 +198,8 @@ export default function Header() {
             <nav className="mt-3 flex flex-col gap-2">
               <Tab to="/">Inicio</Tab>
               <Tab to="/nosotros">Nosotros</Tab>
-              {/* <Tab to="/terapias">Terapias</Tab> */}
             </nav>
 
-            {/* Panel Auth (móvil) */}
             <div className="mt-4 grid gap-2">
               {!loading && user ? (
                 <>
@@ -245,20 +216,8 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/register"
-                    onClick={close}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-900 hover:bg-emerald-50/70 text-center"
-                  >
-                    Registro
-                  </Link>
-                  <Link
-                    to="/login"
-                    onClick={close}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-900 hover:bg-emerald-50/70 text-center"
-                  >
-                    Inicio de sesión
-                  </Link>
+                  <Link to="/register" onClick={close} className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-900 hover:bg-emerald-50/70 text-center">Registro</Link>
+                  <Link to="/login" onClick={close} className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-900 hover:bg-emerald-50/70 text-center">Inicio de sesión</Link>
                 </>
               )}
             </div>
