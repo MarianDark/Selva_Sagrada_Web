@@ -1,45 +1,72 @@
-import axios from 'axios'
+import axios from 'axios';
 
-// ========= Base URL según entorno =========
-const isProd = import.meta.env.MODE === 'production'
+/* ========= Detección de entorno ========= */
+const isProd = import.meta.env.MODE === 'production';
 
-// Si defines VITE_API_URL en .env.prod (por ejemplo https://api.ssselvasagrada.com)
-const provided = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+/* ========= Normalización de baseURL =========
+   - En prod: si VITE_API_URL existe (p. ej. https://api.ssselvasagrada.com), lo usamos y le añadimos /api.
+   - En dev: usamos /api para que el proxy de Vite lo redirija al backend.
+   - Evitamos dobles /api y barras repetidas.
+*/
+function buildBaseURL() {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  if (isProd && envUrl) {
+    // Garantiza que termina en /api
+    return `${envUrl}/api`;
+  }
+  // Dev o prod sin VITE_API_URL: relativo, asumiendo proxy o mismo origin
+  return '/api';
+}
 
-// En prod: usa VITE_API_URL si existe, si no cae al proxy /api
-// En dev: usa /api (vite proxy o el mismo origin)
-const baseURL = isProd && provided ? `${provided}/api` : '/api'
+const baseURL = buildBaseURL();
 
-// ========= Instancia =========
+/* ========= Instancia ========= */
 export const api = axios.create({
   baseURL,
-  withCredentials: true, // cookies httpOnly para la sesión
+  withCredentials: true, // cookies httpOnly via CORS
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
-    // ❌ quitado: 'X-Requested-With': 'XMLHttpRequest'
+    // Algunos setups de CSRF/seguridad esperan esto para XHR
+    'X-Requested-With': 'XMLHttpRequest',
   },
   timeout: 15000,
-})
+});
 
-// ========= Interceptor de request (sanidad mínima) =========
+/* ========= Interceptor de request =========
+   - Si algún día usas Bearer (localStorage/sessionStorage), se inyecta aquí.
+   - No logueamos payloads sensibles, gracias.
+*/
 api.interceptors.request.use((config) => {
-  // Nunca logs de payloads sensibles
-  // Si de verdad quieres loguear algo en dev, hazlo aquí filtrando campos
-  return config
-})
+  // Optativo: Authorization Bearer si lo usas en paralelo a cookies
+  const bearer =
+    typeof window !== 'undefined'
+      ? window.localStorage?.getItem('access_token') || window.sessionStorage?.getItem('access_token')
+      : null;
 
-// ========= Interceptor de respuestas / errores =========
-let redirecting = false
+  if (bearer && !config.headers?.Authorization) {
+    config.headers = { ...config.headers, Authorization: `Bearer ${bearer}` };
+  }
+
+  // Defensa contra dobles /api en llamadas mal formadas
+  // Ej: api.get('/auth/me') => OK; api.get('auth/me') => también OK
+  if (config.url && config.url.startsWith('//')) {
+    config.url = config.url.replace(/^\/+/, '/');
+  }
+
+  return config;
+});
+
+/* ========= Interceptor de respuestas / errores ========= */
+let redirecting = false;
 
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const status = err?.response?.status
-    const method = err?.config?.method?.toUpperCase?.()
-    const url = err?.config?.url
+    const status = err?.response?.status;
+    const method = err?.config?.method?.toUpperCase?.();
+    const url = err?.config?.url;
 
-    // Log útil en dev (sin exponer contraseñas ni tokens)
     if (import.meta.env.DEV) {
       console.error('API error:', {
         method,
@@ -51,29 +78,27 @@ api.interceptors.response.use(
               ? { ...err.response.data, password: undefined, token: undefined }
               : err.response.data)) ||
           '(sin body)',
-      })
+      });
     }
 
-    // 401 → sesión expirada o no autenticado: redirigir a login con next
+    // 401: no autenticado o sesión expirada
     if (status === 401) {
-      const { pathname, search } = window.location
-      const current = `${pathname}${search}`
-
-      // Evita bucles si ya estás en auth
+      const { pathname, search } = window.location;
+      const current = `${pathname}${search}`;
       const isAuthPage = ['/login', '/register', '/forgot-password'].some((p) =>
         pathname.startsWith(p)
-      )
+      );
 
       if (!isAuthPage && !redirecting) {
-        redirecting = true
-        window.location.href = `/login?next=${encodeURIComponent(current)}`
+        redirecting = true;
+        window.location.href = `/login?next=${encodeURIComponent(current)}`;
       }
     }
 
-    // Opcional: puedes manejar 403, 429 o 5xx si quieres dar mensajes globales
+    // Puedes añadir aquí manejo global para 403/429/5xx si te apetece sufrir más.
 
-    return Promise.reject(err)
+    return Promise.reject(err);
   }
-)
+);
 
-export default api
+export default api;

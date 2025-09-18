@@ -76,9 +76,6 @@ export default function Header() {
         <div className="justify-self-start flex items-center gap-2">
           <Link to="/" className="inline-flex items-center gap-2 no-underline">
             <img src={LOGO} alt="Selva Sagrada" className="h-8 w-8 rounded-xl" />
-            <span className="hidden sm:block text-xs md:text-sm font-semibold uppercase tracking-wide text-jungle-900">
-              Selva Sagrada
-            </span>
           </Link>
         </div>
 

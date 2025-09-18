@@ -1,29 +1,53 @@
-const router = require('express').Router()
-const auth = require('../middleware/auth')
-const C = require('../controllers/auth.controller')
+// src/routes/auth.routes.js
+const router = require('express').Router();
+const auth = require('../middleware/auth');
+const C = require('../controllers/auth.controller');
 
+// Envoltorio async seguro para cualquier middleware/handler
 const asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next)
+  Promise.resolve(fn(req, res, next)).catch(next);
 
-// 🔓 Registro — C.register es un ARRAY de middlewares → usa spread
-router.post('/register', ...C.register)
+// Si te pasan un array de middlewares, los envolvemos uno a uno.
+// Si es una función, la envolvemos y listo.
+const wrap = (mw) => Array.isArray(mw) ? mw.map(asyncHandler) : [asyncHandler(mw)];
 
-// Verificación email
-router.get('/verify-email',  asyncHandler(C.verifyEmail))
-router.post('/verify-email', asyncHandler(C.verifyEmail))
+/* ========= Rutas Auth ========= */
 
-// 🔐 Login — C.login es una FUNCIÓN
-router.post('/login', asyncHandler(C.login))
+// Registro (C.register es ARRAY de middlewares)
+router.post('/register', ...wrap(C.register));
 
-router.post('/logout', asyncHandler(C.logout))
+// Verificación de email (puede llegar por GET o POST)
+router.get('/verify-email', ...wrap(C.verifyEmail));
+router.post('/verify-email', ...wrap(C.verifyEmail));
 
-// Usuario actual
-router.get('/me', auth(), asyncHandler(C.me))
+// Login (C.login es FUNCIÓN)
+// OJO: el controlador debe fijar la cookie httpOnly:
+// res.cookie('token', jwtToken, { httpOnly: true, secure: process.env.NODE_ENV==='production', sameSite: 'lax', domain: '.ssselvasagrada.com', path: '/', maxAge: 1000*60*60*24*7 });
+router.post('/login', ...wrap(C.login));
 
-// Recuperación de contraseña
-router.post('/forgot-password', asyncHandler(C.forgotPassword))
+// Logout (si tu controlador no borra la cookie, añade aquí un fallback elegante)
+router.post('/logout', ...wrap(async (req, res) => {
+  // Si C.logout existe, lo usamos y terminamos
+  if (typeof C.logout === 'function') return C.logout(req, res);
 
-// ⛏️ Reset password — C.resetPassword es ARRAY → usa spread
-router.post('/reset-password', ...C.resetPassword)
+  // Fallback: borrar cookie y responder 204
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    domain: '.ssselvasagrada.com',
+    path: '/',
+  });
+  return res.status(204).end();
+}));
 
-module.exports = router
+// Usuario actual (protegida)
+router.get('/me', auth(), ...wrap(C.me));
+
+// Recuperación de contraseña (función)
+router.post('/forgot-password', ...wrap(C.forgotPassword));
+
+// Reset password (ARRAY de middlewares)
+router.post('/reset-password', ...wrap(C.resetPassword));
+
+module.exports = router;

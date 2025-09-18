@@ -25,50 +25,38 @@ app.use(
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
-        // Lo básico
         "default-src": ["'self'"],
-
-        // Scripts: permitimos eval temporalmente y los dominios que usas
         "script-src": [
           "'self'",
-          "'unsafe-eval'",              // ← habilita bundles que usan new Function/eval
-          "https://www.google.com",     // reCAPTCHA
-          "https://www.gstatic.com"     // reCAPTCHA
+          "'unsafe-eval'",
+          "https://www.google.com",
+          "https://www.gstatic.com"
         ],
-
-        // AJAX/WebSocket
         "connect-src": [
           "'self'",
           process.env.API_PUBLIC_ORIGIN || "https://api.ssselvasagrada.com",
           "https://www.google.com",
           "https://www.gstatic.com"
         ],
-
-        // Imágenes
         "img-src": ["'self'", "data:", "https://www.google.com", "https://www.gstatic.com"],
-
-        // CSS (Google Fonts requiere 'unsafe-inline' para sus inlines)
         "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-
-        // Fuentes
         "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
-
-        // iframes (reCAPTCHA)
         "frame-src": ["'self'", "https://www.google.com"],
-
-        // Manifiesto PWA y demás
         "manifest-src": ["'self'"],
       },
     },
   })
-)
+);
 
 /* ===== CORS con credenciales ===== */
+// ★ Lista cruda desde env + dominios web explícitos
 const RAW_ORIGINS = Array.from(
   new Set(
     [
       process.env.CLIENT_URL,
       ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
+      'https://www.ssselvasagrada.com',   // ★ añadido
+      'https://ssselvasagrada.com',       // ★ añadido (apex)
       !isProd && 'http://localhost:5173',
       process.env.ALLOW_RENDER_ORIGIN === '1' && 'https://selva-sagrada-web.onrender.com',
     ]
@@ -77,6 +65,7 @@ const RAW_ORIGINS = Array.from(
   )
 );
 
+// Normalizamos a .origin para evitar paths fantasma
 const ALLOWED_ORIGINS = RAW_ORIGINS
   .map(u => {
     try { return new URL(u).origin; } catch { return null; }
@@ -91,12 +80,14 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  // ★ Añadimos cabeceras típicas de XHR/CSRF
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+// ★ Preflight con las mismas opciones (no genérico suelto)
+app.options('*', cors(corsOptions));
 
 /* Parsers */
 app.use(express.json({ limit: '1mb' }));
@@ -124,16 +115,13 @@ const logger = pino(
     level: process.env.LOG_LEVEL || (isProd ? 'warn' : 'info'),
     redact: {
       paths: [
-        // Cookies y auth headers
         'req.headers.cookie',
         'req.headers.authorization',
         'res.headers["set-cookie"]',
-        // Cuerpos con credenciales o secretos
         'req.body.password',
         'req.body.newPassword',
         'req.body.passwordHash',
         'req.body.token',
-        // Queries por si algún iluminado manda cosas sensibles ahí
         'req.query.password',
         'req.query.newPassword',
         'req.query.passwordHash',
@@ -146,7 +134,7 @@ const logger = pino(
   transport
 );
 
-const IGNORED_ROUTES = ['/api/auth/me', '/api/health'];
+const IGNORED_ROUTES = ['/api/health']; // ★ quito /api/auth/me del ignore para cazar 401
 
 app.use(
   pinoHttp({
