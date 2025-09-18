@@ -36,9 +36,10 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   --font-display: "Outfit", ui-sans-serif, system-ui;
 
-  /* Sombras personalizadas */
-  --shadow-jungle-lg: 0 12px 28px rgba(16, 24, 16, 0.14);
+  /* Sombras: define tokens para que existan como utilities */
+  --shadow-soft: 0 8px 30px rgba(16, 24, 16, .10);
   --shadow-jungle-sm: 0 6px 18px rgba(16, 24, 16, 0.10);
+  --shadow-jungle-lg: 0 12px 28px rgba(16, 24, 16, 0.14);
 }
 
 /* ====== Keyframes ====== */
@@ -71,7 +72,7 @@
 
 /* ====== Utilities personalizadas ====== */
 @layer utilities {
-  /* Sombras suaves tipo “liana” */
+  /* Sombras “liana” (clases normales, no @apply-ables) */
   .shadow-vines {
     box-shadow:
       0 1px 0 rgba(16, 185, 129, 0.15) inset,
@@ -94,9 +95,6 @@
     background-size: 22px 22px, 26px 26px, 30px 30px;
   }
 
-  /* Fallback sombra genérica */
-  .shadow-soft { box-shadow: 0 8px 30px rgba(16, 24, 16, .10); }
-
   /* Entradas sutiles */
   .enter-up { animation: fadeUp .6s ease-out both; }
   .bounce-soft {
@@ -115,6 +113,7 @@
 
 /* ====== Componentes reutilizables ====== */
 @layer components {
+  /* OJO: ahora sí puedes @apply shadow-soft porque es un utility real */
   .card { @apply bg-white/95 backdrop-blur rounded-2xl border border-jungle-100 shadow-soft; }
 
   .btn-primary {
@@ -129,8 +128,8 @@
 
   /* Tabs del header */
   .tab { @apply px-4 py-2 rounded-full text-sm font-semibold transition-colors; }
-  .tab-inactive { @apply text-jungle-900/80 hover:text-jungle-900 hover:bg-earth-100; }
-  .tab-active { @apply bg-sun-400 text-amber-950 shadow-sm; }
+  .tab-inactivo { @apply text-jungle-900/80 hover:text-jungle-900 hover:bg-earth-100; }
+  .tab-activo { @apply bg-sun-400 text-amber-950 shadow-sm; }
 
   /* Panel derecho del header (Registro/Login) */
   .auth-panel { @apply flex items-center gap-1 rounded-xl border border-jungle-200 bg-white shadow-sm p-1.5; }
