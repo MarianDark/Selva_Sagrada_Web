@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview --port 5174",
-    "dev:css": "tailwindcss -i ./src/index.css -o ./src/output.css --watch"
+    "preview": "vite preview --port 5174"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
@@ -17,6 +16,7 @@
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
     "@hookform/resolvers": "^5.2.1",
+    "@tailwindcss/vite": "^4.1.13",
     "axios": "^1.12.1",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
@@ -24,12 +24,11 @@
     "react-google-recaptcha": "^3.1.0",
     "react-hook-form": "^7.62.0",
     "react-router-dom": "^7.8.2",
+    "tailwindcss": "^4.1.13",
     "zod": "^4.1.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
-    "@tailwindcss/postcss": "^4.1.13",
-    "@tailwindcss/vite": "^4.1.13",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.3",
@@ -38,8 +37,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.13",
     "vite": "^7.1.6",
     "vite-plugin-pwa": "^1.0.3"
   },
