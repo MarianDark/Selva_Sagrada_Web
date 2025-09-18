@@ -1,27 +1,27 @@
 // backend/server.js
-require('dotenv').config();
-const { randomUUID } = require('crypto');
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const cookieParser = require('cookie-parser');
-const rateLimit = require('express-rate-limit');
-const connect = require('./src/config/db');
-const pino = require('pino');
-const pinoHttp = require('pino-http');
+require("dotenv").config();
+const { randomUUID } = require("crypto");
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
+const rateLimit = require("express-rate-limit");
+const connect = require("./src/config/db");
+const pino = require("pino");
+const pinoHttp = require("pino-http");
 
 const app = express();
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === "production";
 
 /* Proxies (Render/NGINX) + seguridad base */
-app.set('trust proxy', 1);
-app.disable('x-powered-by');
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
 
 /* Helmet */
 app.use(
   helmet({
-    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
@@ -30,16 +30,25 @@ app.use(
           "'self'",
           "'unsafe-eval'",
           "https://www.google.com",
-          "https://www.gstatic.com"
+          "https://www.gstatic.com",
         ],
         "connect-src": [
           "'self'",
           process.env.API_PUBLIC_ORIGIN || "https://api.ssselvasagrada.com",
           "https://www.google.com",
-          "https://www.gstatic.com"
+          "https://www.gstatic.com",
         ],
-        "img-src": ["'self'", "data:", "https://www.google.com", "https://www.gstatic.com"],
-        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        "img-src": [
+          "'self'",
+          "data:",
+          "https://www.google.com",
+          "https://www.gstatic.com",
+        ],
+        "style-src": [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+        ],
         "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
         "frame-src": ["'self'", "https://www.google.com"],
         "manifest-src": ["'self'"],
@@ -53,22 +62,25 @@ const RAW_ORIGINS = Array.from(
   new Set(
     [
       process.env.CLIENT_URL,
-      ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(',') : []),
-      'https://www.ssselvasagrada.com',
-      'https://ssselvasagrada.com',
-      !isProd && 'http://localhost:5173',
-      process.env.ALLOW_RENDER_ORIGIN === '1' && 'https://selva-sagrada-web.onrender.com',
+      ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(",") : []),
+      "https://www.ssselvasagrada.com",
+      "https://ssselvasagrada.com",
+      !isProd && "http://localhost:5173",
+      process.env.ALLOW_RENDER_ORIGIN === "1" &&
+        "https://selva-sagrada-web.onrender.com",
     ]
       .filter(Boolean)
-      .map(s => s.trim())
+      .map((s) => s.trim())
   )
 );
 
-const ALLOWED_ORIGINS = RAW_ORIGINS
-  .map(u => {
-    try { return new URL(u).origin; } catch { return null; }
-  })
-  .filter(Boolean);
+const ALLOWED_ORIGINS = RAW_ORIGINS.map((u) => {
+  try {
+    return new URL(u).origin;
+  } catch {
+    return null;
+  }
+}).filter(Boolean);
 
 const corsOptions = {
   origin(origin, cb) {
@@ -77,82 +89,111 @@ const corsOptions = {
     return cb(ok ? null : new Error(`Not allowed by CORS: ${origin}`), ok);
   },
   credentials: true,
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   // Refleja lo que pida el navegador en el preflight (para que no te bloquee headers nuevos)
   allowedHeaders(req, cb) {
-    const reqHeaders = req.header('Access-Control-Request-Headers');
-    cb(null, reqHeaders || 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
+    const reqHeaders = req.header("Access-Control-Request-Headers");
+    cb(
+      null,
+      reqHeaders ||
+        "Content-Type, Authorization, X-Requested-With, X-CSRF-Token"
+    );
   },
-  exposedHeaders: ['Set-Cookie'],
+  exposedHeaders: ["Set-Cookie"],
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// Express 5 ya no acepta '*' como path; usa regex:
+app.options(/.*/, cors(corsOptions));
 // Evita caches raros en proxies intermedios
 app.use((req, res, next) => {
-  res.header('Vary', 'Origin, Access-Control-Request-Headers');
+  res.header("Vary", "Origin, Access-Control-Request-Headers");
   next();
 });
 
 /* Parsers */
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
 /* Rate limits */
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 app.use(limiter);
 
-const tightLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
-const contactLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
-const bookingLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false });
+const tightLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const contactLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const bookingLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-app.use('/api/auth/login', tightLimiter);
-app.use('/api/auth/register', tightLimiter);
-app.use('/api/auth/forgot-password', tightLimiter);
-app.use('/api/contact', contactLimiter);
-app.use('/api/booking', bookingLimiter);
+app.use("/api/auth/login", tightLimiter);
+app.use("/api/auth/register", tightLimiter);
+app.use("/api/auth/forgot-password", tightLimiter);
+app.use("/api/contact", contactLimiter);
+app.use("/api/booking", bookingLimiter);
 
 /* Logger (pino + pino-http) */
-const transport = !isProd ? pino.transport({ target: 'pino-pretty', options: { singleLine: true } }) : undefined;
+const transport = !isProd
+  ? pino.transport({ target: "pino-pretty", options: { singleLine: true } })
+  : undefined;
 
 const logger = pino(
   {
-    level: process.env.LOG_LEVEL || (isProd ? 'warn' : 'info'),
+    level: process.env.LOG_LEVEL || (isProd ? "warn" : "info"),
     redact: {
       paths: [
-        'req.headers.cookie',
-        'req.headers.authorization',
+        "req.headers.cookie",
+        "req.headers.authorization",
         'res.headers["set-cookie"]',
-        'req.body.password',
-        'req.body.newPassword',
-        'req.body.passwordHash',
-        'req.body.token',
-        'req.query.password',
-        'req.query.newPassword',
-        'req.query.passwordHash',
-        'req.query.token'
+        "req.body.password",
+        "req.body.newPassword",
+        "req.body.passwordHash",
+        "req.body.token",
+        "req.query.password",
+        "req.query.newPassword",
+        "req.query.passwordHash",
+        "req.query.token",
       ],
-      censor: '[redacted]',
+      censor: "[redacted]",
       remove: true,
     },
   },
   transport
 );
 
-const IGNORED_ROUTES = ['/api/health'];
+const IGNORED_ROUTES = ["/api/health"];
 
 app.use(
   pinoHttp({
     logger,
-    genReqId: req => req.headers['x-request-id'] || randomUUID(),
+    genReqId: (req) => req.headers["x-request-id"] || randomUUID(),
     autoLogging: {
-      ignore: req => req.method === 'OPTIONS' || IGNORED_ROUTES.some(p => req.url.startsWith(p)),
+      ignore: (req) =>
+        req.method === "OPTIONS" ||
+        IGNORED_ROUTES.some((p) => req.url.startsWith(p)),
     },
     customLogLevel: (res, err) => {
-      if (err || res.statusCode >= 500) return 'error';
-      if (res.statusCode >= 400) return 'warn';
-      return isProd ? 'silent' : 'info';
+      if (err || res.statusCode >= 500) return "error";
+      if (res.statusCode >= 400) return "warn";
+      return isProd ? "silent" : "info";
     },
     serializers: {
       req(req) {
@@ -160,7 +201,7 @@ app.use(
           id: req.id,
           method: req.method,
           url: req.url,
-          ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress,
+          ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress,
         };
       },
       res(res) {
@@ -170,44 +211,47 @@ app.use(
   })
 );
 
-if (!isProd) logger.info({ allowed: ALLOWED_ORIGINS }, 'CORS ALLOWED_ORIGINS');
+if (!isProd) logger.info({ allowed: ALLOWED_ORIGINS }, "CORS ALLOWED_ORIGINS");
 
 /* Rutas básicas */
-app.get('/', (_, res) => res.json({ name: 'Selva Sagrada API', status: 'ok' }));
-app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
+app.get("/", (_, res) => res.json({ name: "Selva Sagrada API", status: "ok" }));
+app.get("/api/health", (_, res) => res.json({ status: "ok" }));
 
 /* Rutas API */
-app.use('/api/auth', require('./src/routes/auth.routes'));
-app.use('/api/availability', require('./src/routes/availability.routes'));
-app.use('/api/booking', require('./src/routes/booking.routes'));
-app.use('/api/contact', require('./src/routes/contact.routes'));
+app.use("/api/auth", require("./src/routes/auth.routes"));
+app.use("/api/availability", require("./src/routes/availability.routes"));
+app.use("/api/booking", require("./src/routes/booking.routes"));
+app.use("/api/contact", require("./src/routes/contact.routes"));
 
 /* 404 para /api desconocidas */
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not Found' });
+  if (req.path.startsWith("/api/"))
+    return res.status(404).json({ message: "Not Found" });
   next();
 });
 
 /* 404 genérico */
 app.use((req, res, next) => {
   if (res.headersSent) return next();
-  res.status(404).json({ error: 'Not Found' });
+  res.status(404).json({ error: "Not Found" });
 });
 
 /* Error handler */
-app.use(require('./src/middleware/error'));
+app.use(require("./src/middleware/error"));
 
 const PORT = process.env.PORT || 3000;
 
 connect()
   .then(() => app.listen(PORT, () => logger.info(`API listening on :${PORT}`)))
-  .catch(err => {
-    logger.error({ err }, 'Error connecting to DB');
+  .catch((err) => {
+    logger.error({ err }, "Error connecting to DB");
     process.exit(1);
   });
 
-process.on('unhandledRejection', reason => logger.error({ reason }, 'Unhandled Rejection'));
-process.on('uncaughtException', err => {
-  logger.error({ err }, 'Uncaught Exception');
+process.on("unhandledRejection", (reason) =>
+  logger.error({ reason }, "Unhandled Rejection")
+);
+process.on("uncaughtException", (err) => {
+  logger.error({ err }, "Uncaught Exception");
   process.exit(1);
 });
