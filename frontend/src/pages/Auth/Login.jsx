@@ -1,57 +1,61 @@
 // frontend/src/pages/Login.jsx
-import { useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { api } from '@/lib/api'
-import { useAuth } from '@/context/AuthContext'
+import { useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { api } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Login() {
-  const { register, handleSubmit, setValue } = useForm()
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const passInputRef = useRef(null)
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    setFocus,           // ← usa esto en vez de ref manual
+    formState: { isSubmitting }
+  } = useForm();
 
-  const { loginSuccess } = useAuth()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const passEl = useRef(null); // opcional, pero lo fusionamos bien
+
+  const { loginSuccess } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const onSubmit = async (form) => {
-    setError('')
-    setSubmitting(true)
+    setErrorMsg('');
     try {
-      // Enviamos credenciales (la password no se guarda en estado)
       await api.post('/auth/login', {
-        email: form.email,
-        password: form.password,
-      })
+        email: String(form.email || '').trim(),
+        password: form.password
+      });
 
-      // Refresca sesión en el contexto
-      await loginSuccess()
+      await loginSuccess();
 
-      // Higiene: limpia password y quita foco
-      setValue('password', '')
-      passInputRef.current?.blur()
+      // higiene
+      setValue('password', '');
+      passEl.current?.blur?.();
 
-      // Redirección
-      const next = searchParams.get('next') || '/mi-cuenta'
-      navigate(next, { replace: true })
+      const next = searchParams.get('next') || '/mi-cuenta';
+      navigate(next, { replace: true });
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || 'Error iniciando sesión'
-      setError(msg)
-      // limpia y enfoca password para reintento rápido
-      setValue('password', '')
-      passInputRef.current?.focus()
-    } finally {
-      setSubmitting(false)
+      const msg = e?.response?.data?.message || e?.message || 'Error iniciando sesión';
+      setErrorMsg(msg);
+      setValue('password', '');
+      // enfoca usando RHF para no romper el registro
+      setTimeout(() => setFocus('password'), 0);
     }
-  }
+  };
+
+  // fusionamos refs: mantenemos la de RHF y guardamos el elemento en passEl
+  const passwordReg = register('password', { required: true });
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="max-w-md mx-auto p-6 space-y-4 bg-white rounded-xl shadow"
       autoComplete="on"
+      noValidate
     >
       <h1 className="text-2xl font-bold text-emerald-700">Inicia sesión</h1>
 
@@ -71,8 +75,11 @@ export default function Login() {
         <label className="block text-sm text-gray-700">Contraseña</label>
         <div className="relative">
           <input
-            {...register('password', { required: true })}
-            ref={passInputRef}
+            {...passwordReg}
+            ref={(el) => {
+              passwordReg.ref(el);   // ← mantiene RHF
+              passEl.current = el;   // ← y tú sigues teniendo la ref
+            }}
             type={showPassword ? 'text' : 'password'}
             placeholder="********"
             autoComplete="current-password"
@@ -87,15 +94,10 @@ export default function Login() {
             className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-md p-1.5 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {showPassword ? (
-              // Ojo turco abierto (imagen en public/)
               <img src="/ojo-turco.jpg" alt="" className="w-5 h-5" />
             ) : (
-              // Ojo cerrado genérico en SVG
               <svg viewBox="0 0 24 24" className="w-5 h-5 text-gray-600" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zm10 4.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z"
-                />
+                <path fill="currentColor" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zm10 4.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z" />
                 <circle cx="12" cy="12" r="2.5" fill="currentColor" />
               </svg>
             )}
@@ -103,19 +105,20 @@ export default function Login() {
         </div>
       </div>
 
-      {error && (
+      {errorMsg && (
         <p className="text-red-600 text-sm" role="alert">
-          {error}
+          {errorMsg}
         </p>
       )}
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={isSubmitting}
         className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700 disabled:opacity-60"
+        aria-busy={isSubmitting ? 'true' : 'false'}
       >
-        {submitting ? 'Entrando…' : 'Entrar'}
+        {isSubmitting ? 'Entrando…' : 'Entrar'}
       </button>
     </form>
-  )
+  );
 }
