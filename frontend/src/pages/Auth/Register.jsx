@@ -37,7 +37,7 @@ function EyeButton({ pressed, onToggle, labelShow, labelHide }) {
     >
       {/* pressed=true significa que el campo está visible, así que mostramos el icono de "ocultar" */}
       <img
-        src={pressed ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
+        src={pressed ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
         alt=""
         className="w-5 h-5 object-contain"
       />
