@@ -5,7 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const session = require("express-session");
+const session = require("express-session"); // si no usas sesiones, bórralo y quita el bloque session()
 const rateLimit = require("express-rate-limit");
 const connect = require("./src/config/db");
 const pino = require("pino");
@@ -21,11 +21,26 @@ const isProd = process.env.NODE_ENV === "production";
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
-/* Helmet */
+/* ===== CORS con credenciales (PRIMERO SIEMPRE) ===== */
+app.use(cors(corsOptions));
+// Preflight universal (OPTIONS) con 204
+app.options("*", cors(corsOptions));
+// Evita caches raros en proxies intermedios
+app.use((req, res, next) => {
+  res.header("Vary", "Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
+  next();
+});
+
+/* Parsers */
+app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
+
+/* Helmet (después de CORS) */
 app.use(
   helmet({
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    // Si sirves solo API, podrías directamente poner contentSecurityPolicy: false
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
@@ -34,97 +49,92 @@ app.use(
           "'self'",
           "'unsafe-eval'",
           "https://www.google.com",
-          "https://www.gstatic.com",
+          "https://www.gstatic.com"
         ],
         "connect-src": [
           "'self'",
           process.env.API_PUBLIC_ORIGIN || "https://api.ssselvasagrada.com",
           "https://www.google.com",
           "https://www.gstatic.com",
+          "https://ssselvasagrada.com",
+          "https://www.ssselvasagrada.com"
         ],
         "img-src": [
           "'self'",
           "data:",
           "https://www.google.com",
-          "https://www.gstatic.com",
+          "https://www.gstatic.com"
         ],
         "style-src": [
           "'self'",
           "'unsafe-inline'",
-          "https://fonts.googleapis.com",
+          "https://fonts.googleapis.com"
         ],
         "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
         "frame-src": ["'self'", "https://www.google.com"],
-        "manifest-src": ["'self'"],
-      },
-    },
+        "manifest-src": ["'self'"]
+      }
+    }
   })
 );
 
-/* ===== CORS con credenciales (centralizado) ===== */
-app.use(cors(corsOptions));
-// Preflight universal (OPTIONS)
-app.options("*", cors(corsOptions));
-// Evita caches raros en proxies intermedios
-app.use((req, res, next) => {
-  res.header("Vary", "Origin, Access-Control-Request-Headers");
-  next();
-});
-
-/* Parsers */
-app.use(express.json({ limit: "1mb" }));
-app.use(cookieParser());
-
-/* ===== Sesión con cookies seguras (para subdominios .ssselvasagrada.com) =====
-   Nota: tu autenticación principal va por JWT en cookie 'sid'. Esta sesión
-   la mantengo por si usas flash/csrf u otras rutas stateful. Ajusta SameSite
-   según necesites. Entre subdominios suele bastar 'lax'. */
+/* ===== Sesión con cookies seguras (opcional) =====
+   Si tu autenticación principal es JWT via cookie (p.ej. 'sid'), puedes
+   mantener session para CSRF/flash. Si no la necesitas, comenta todo este bloque
+   y elimina la dependencia express-session del package.json.
+*/
 const COOKIE_DOMAIN = isProd ? ".ssselvasagrada.com" : undefined;
-const SESSION_SECRET =
-  process.env.SESSION_SECRET || "cambia-ESTO-por-un-secreto-fuerte";
+const SESSION_SECRET = process.env.SESSION_SECRET || "cambia-ESTO-por-un-secreto-fuerte";
 
 app.use(
   session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    proxy: true, // respetar secure detrás de proxy
+    proxy: true, // respeta secure detrás de proxy
     cookie: {
-      secure: isProd, // exige HTTPS en prod
+      secure: isProd, // true en prod (HTTPS)
       httpOnly: true,
+      // Subdominios (api.<dominio> y <dominio>) son "same-site".
+      // Lax funciona para la mayoría de casos. Si en algún flujo el navegador
+      // no envía la cookie, sube a 'none' y añade Secure.
       sameSite: isProd ? "lax" : "lax",
-      domain: COOKIE_DOMAIN, // comparte cookie entre api. y raíz en prod
-      maxAge: 1000 * 60 * 60 * 24, // 1 día
-    },
+      domain: COOKIE_DOMAIN,
+      maxAge: 1000 * 60 * 60 * 24 // 1 día
+    }
   })
 );
 
-/* Rate limits */
-const limiter = rateLimit({
+/* Rate limits (ignora OPTIONS para no romper preflight) */
+const baseLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  limit: 300,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: req => req.method === "OPTIONS"
 });
-app.use(limiter);
+app.use(baseLimiter);
 
 const tightLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 30,
+  limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: req => req.method === "OPTIONS"
 });
 const contactLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 40,
+  limit: 40,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: req => req.method === "OPTIONS"
 });
 const bookingLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 60,
+  limit: 60,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: req => req.method === "OPTIONS"
 });
 
 app.use("/api/auth/login", tightLimiter);
@@ -153,11 +163,11 @@ const logger = pino(
         "req.query.password",
         "req.query.newPassword",
         "req.query.passwordHash",
-        "req.query.token",
+        "req.query.token"
       ],
       censor: "[redacted]",
-      remove: true,
-    },
+      remove: true
+    }
   },
   transport
 );
@@ -167,11 +177,11 @@ const IGNORED_ROUTES = ["/api/health"];
 app.use(
   pinoHttp({
     logger,
-    genReqId: (req) => req.headers["x-request-id"] || randomUUID(),
+    genReqId: req => req.headers["x-request-id"] || randomUUID(),
     autoLogging: {
-      ignore: (req) =>
+      ignore: req =>
         req.method === "OPTIONS" ||
-        IGNORED_ROUTES.some((p) => req.url.startsWith(p)),
+        IGNORED_ROUTES.some(p => req.url.startsWith(p))
     },
     customLogLevel: (res, err) => {
       if (err || res.statusCode >= 500) return "error";
@@ -184,13 +194,13 @@ app.use(
           id: req.id,
           method: req.method,
           url: req.url,
-          ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress,
+          ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress
         };
       },
       res(res) {
         return { statusCode: res.statusCode };
-      },
-    },
+      }
+    }
   })
 );
 
