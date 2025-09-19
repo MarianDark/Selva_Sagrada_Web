@@ -1,75 +1,92 @@
 // frontend/src/lib/api.js
-import axios from 'axios'
+import axios from "axios";
 
 /* ========= Detección de entorno ========= */
-const isProd = import.meta.env.MODE === 'production'
+const isProd = import.meta.env.MODE === "production";
 
-/* ========= Normalización de baseURL ========= */
-function buildBaseURL() {
-  const envUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '')
-  if (isProd && envUrl) return `${envUrl}/api`
-  return '/api'
+/* ========= Resolver ORIGEN del API (sin /api) =========
+   Producción: usa VITE_API_URL si existe (p. ej. https://api.ssselvasagrada.com)
+               si no existe, cae en https://api.ssselvasagrada.com
+   Dev:        usa VITE_API_URL si existe, si no http://localhost:3000
+*/
+function computeApiOrigin() {
+  const envUrl = (import.meta.env.VITE_API_URL || "").trim().replace(/\/+$/, "");
+  if (envUrl) return envUrl;
+  return isProd ? "https://api.ssselvasagrada.com" : "http://localhost:3000";
 }
-const baseURL = buildBaseURL()
 
-/* ========= Instancia ========= */
+const API_ORIGIN = computeApiOrigin();
+
+/* ========= Instancia =========
+   OJO: las rutas que llames deben empezar por "/api/..."
+   Ej: api.get("/api/auth/me")
+*/
 export const api = axios.create({
-  baseURL,
+  baseURL: API_ORIGIN,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 15000,
-})
+  timeout: 15000
+});
 
 /* ========= Interceptor de request ========= */
 api.interceptors.request.use((config) => {
+  // Añade Bearer opcional si lo guardas en storage
   const bearer =
-    typeof window !== 'undefined'
-      ? window.localStorage?.getItem('access_token') ||
-        window.sessionStorage?.getItem('access_token')
-      : null
+    typeof window !== "undefined"
+      ? window.localStorage?.getItem("access_token") ||
+        window.sessionStorage?.getItem("access_token")
+      : null;
 
   if (bearer && !config.headers?.Authorization) {
-    config.headers = { ...config.headers, Authorization: `Bearer ${bearer}` }
+    config.headers = { ...config.headers, Authorization: `Bearer ${bearer}` };
   }
 
-  if (config.url && config.url.startsWith('//')) {
-    config.url = config.url.replace(/^\/+/, '/')
+  // Asegura Content-Type JSON solo cuando hay body
+  const hasBody = !!config.data;
+  if (hasBody && !config.headers?.["Content-Type"]) {
+    config.headers = { ...config.headers, "Content-Type": "application/json" };
   }
 
-  return config
-})
+  // X-Requested-With para facilitar detección de AJAX en backend
+  if (!config.headers?.["X-Requested-With"]) {
+    config.headers = { ...config.headers, "X-Requested-With": "XMLHttpRequest" };
+  }
+
+  // Normaliza urls tipo "//api/auth" -> "/api/auth"
+  if (typeof config.url === "string" && config.url.startsWith("//")) {
+    config.url = config.url.replace(/^\/+/, "/");
+  }
+
+  return config;
+});
 
 /* ========= Interceptor de respuestas / errores ========= */
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const status = err?.response?.status
+    const status = err?.response?.status;
 
     if (import.meta.env.DEV) {
-      const method = err?.config?.method?.toUpperCase?.()
-      const url = err?.config?.url
-      console.error('API error:', {
+      const method = err?.config?.method?.toUpperCase?.();
+      const url = err?.config?.url;
+      // Evitar volcar credenciales en consola
+      const safeData =
+        (err?.response?.data &&
+          (typeof err.response.data === "object"
+            ? { ...err.response.data, password: undefined, token: undefined }
+            : err.response.data)) || "(sin body)";
+
+      // eslint-disable-next-line no-console
+      console.error("API error:", {
         method,
         url,
-        status: status ?? '(sin status)',
-        data:
-          (err?.response?.data &&
-            (typeof err.response.data === 'object'
-              ? { ...err.response.data, password: undefined, token: undefined }
-              : err.response.data)) ||
-          '(sin body)',
-      })
+        status: status ?? "(sin status)",
+        data: safeData
+      });
     }
 
-    // ❌ Nada de redirecciones globales en 401.
-    // El flujo de acceso se controla en <ProtectedRoute />.
-    // Si quieres redirigir en algún caso concreto, hazlo desde ese componente.
-
-    return Promise.reject(err)
+    // Sin redirecciones automáticas en 401: que lo gestione tu guard/ProtectedRoute
+    return Promise.reject(err);
   }
-)
+);
 
-export default api
+export default api;
