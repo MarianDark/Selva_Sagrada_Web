@@ -164,7 +164,7 @@ export default function Register() {
             <img
               src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
               alt=""
-              className="w-5 h-5 object-contain"
+              className="w-5 h-5 contain-button"
             />
           </button>
         {errors.confirm ? (
