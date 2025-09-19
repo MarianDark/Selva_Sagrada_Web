@@ -26,6 +26,25 @@ const schema = z
     path: ["confirm"],
   });
 
+function EyeButton({ pressed, onToggle, labelShow, labelHide }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={pressed ? labelHide : labelShow}
+      aria-pressed={pressed ? "true" : "false"}
+      className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+    >
+      {/* pressed=true significa que el campo está visible, así que mostramos el icono de "ocultar" */}
+      <img
+        src={pressed ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
+        alt=""
+        className="w-5 h-5 object-contain"
+      />
+    </button>
+  );
+}
+
 export default function Register() {
   const [ok, setOk] = useState("");
   const [error, setError] = useState("");
@@ -69,9 +88,7 @@ export default function Register() {
       } catch (e) {
         const status = e?.response?.status;
         if (status === 401 || status === 403) {
-          setOk(
-            "Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión."
-          );
+          setOk("Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión.");
         } else {
           setOk("Registro exitoso. Ahora puedes iniciar sesión.");
         }
@@ -101,9 +118,7 @@ export default function Register() {
           {...register("name")}
           autoComplete="name"
         />
-        {errors.name && (
-          <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
-        )}
+        {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
       </div>
 
       <div>
@@ -114,9 +129,7 @@ export default function Register() {
           {...register("email")}
           autoComplete="email"
         />
-        {errors.email && (
-          <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
-        )}
+        {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
       </div>
 
       {/* Password */}
@@ -128,21 +141,12 @@ export default function Register() {
           {...register("password")}
           autoComplete="new-password"
         />
-        <button
-          type="button"
-          onClick={() => setShowPassword((v) => !v)}
-          aria-label={
-            showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-          }
-          aria-pressed={showPassword ? "true" : "false"}
-          className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        >
-          <img
-            src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
-            alt=""
-            className="w-5 h-5 object-contain"
-          />
-        </button>
+        <EyeButton
+          pressed={showPassword}
+          onToggle={() => setShowPassword((v) => !v)}
+          labelShow="Mostrar contraseña"
+          labelHide="Ocultar contraseña"
+        />
         {errors.password ? (
           <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
         ) : (
@@ -162,29 +166,16 @@ export default function Register() {
           {...register("confirm")}
           autoComplete="new-password"
         />
-        <button
-          type="button"
-          onClick={() => setShowConfirm((v) => !v)}
-          aria-label={
-            showConfirm
-              ? "Ocultar confirmación de contraseña"
-              : "Mostrar confirmación de contraseña"
-          }
-          aria-pressed={showConfirm ? "true" : "false"}
-          className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        >
-          <img
-            src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
-            alt=""
-            className="w-5 h-5 object-contain"
-          />
-        </button>
+        <EyeButton
+          pressed={showConfirm}
+          onToggle={() => setShowConfirm((v) => !v)}
+          labelShow="Mostrar confirmación de contraseña"
+          labelHide="Ocultar confirmación de contraseña"
+        />
         {errors.confirm ? (
           <p className="text-sm text-red-600 mt-1">{errors.confirm.message}</p>
         ) : password ? (
-          <p className="text-xs text-zinc-500 mt-1">
-            Debe coincidir con la contraseña.
-          </p>
+          <p className="text-xs text-zinc-500 mt-1">Debe coincidir con la contraseña.</p>
         ) : null}
       </div>
 
