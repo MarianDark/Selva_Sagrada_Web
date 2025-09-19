@@ -127,7 +127,7 @@ export default function Register() {
           onClick={() => setShowPassword((v) => !v)}
           aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           aria-pressed={showPassword ? 'true' : 'false'}
-          className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="absolute right-3 top-2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <img
             src={showPassword ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
