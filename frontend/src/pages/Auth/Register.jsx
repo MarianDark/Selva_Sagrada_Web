@@ -147,7 +147,7 @@ export default function Register() {
           onToggle={() => setShowPassword((v) => !v)}
           labelShow="Mostrar contraseña"
           labelHide="Ocultar contraseña"
-          positionClass="top-[25%]"
+          positionClass="top-[10%]"
 
         />
         {errors.password ? (
