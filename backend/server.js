@@ -5,27 +5,24 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const session = require("express-session"); // si no usas sesiones, bórralo y quita el bloque session()
 const rateLimit = require("express-rate-limit");
 const connect = require("./src/config/db");
 const pino = require("pino");
 const pinoHttp = require("pino-http");
 
-// === CORS centralizado ===
+// CORS
 const { corsOptions, allowed } = require("./src/config/cors");
 
 const app = express();
 const isProd = process.env.NODE_ENV === "production";
 
-/* Proxies (Render/NGINX) + seguridad base */
+/* Proxy y seguridad base */
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
-/* ===== CORS con credenciales (PRIMERO SIEMPRE) ===== */
+/* ===== CORS (antes que nada) ===== */
 app.use(cors(corsOptions));
-// Preflight universal (OPTIONS) con 204
 app.options("*", cors(corsOptions));
-// Evita caches raros en proxies intermedios
 app.use((req, res, next) => {
   res.header("Vary", "Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
   next();
@@ -35,77 +32,16 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
-/* Helmet (después de CORS) */
+/* Helmet básico para API (CSP off) */
 app.use(
   helmet({
+    contentSecurityPolicy: false,
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    // Si sirves solo API, podrías directamente poner contentSecurityPolicy: false
-    contentSecurityPolicy: {
-      useDefaults: true,
-      directives: {
-        "default-src": ["'self'"],
-        "script-src": [
-          "'self'",
-          "'unsafe-eval'",
-          "https://www.google.com",
-          "https://www.gstatic.com"
-        ],
-        "connect-src": [
-          "'self'",
-          process.env.API_PUBLIC_ORIGIN || "https://api.ssselvasagrada.com",
-          "https://www.google.com",
-          "https://www.gstatic.com",
-          "https://ssselvasagrada.com",
-          "https://www.ssselvasagrada.com"
-        ],
-        "img-src": [
-          "'self'",
-          "data:",
-          "https://www.google.com",
-          "https://www.gstatic.com"
-        ],
-        "style-src": [
-          "'self'",
-          "'unsafe-inline'",
-          "https://fonts.googleapis.com"
-        ],
-        "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
-        "frame-src": ["'self'", "https://www.google.com"],
-        "manifest-src": ["'self'"]
-      }
-    }
+    crossOriginResourcePolicy: { policy: "cross-origin" }
   })
 );
 
-/* ===== Sesión con cookies seguras (opcional) =====
-   Si tu autenticación principal es JWT via cookie (p.ej. 'sid'), puedes
-   mantener session para CSRF/flash. Si no la necesitas, comenta todo este bloque
-   y elimina la dependencia express-session del package.json.
-*/
-const COOKIE_DOMAIN = isProd ? ".ssselvasagrada.com" : undefined;
-const SESSION_SECRET = process.env.SESSION_SECRET || "cambia-ESTO-por-un-secreto-fuerte";
-
-app.use(
-  session({
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    proxy: true, // respeta secure detrás de proxy
-    cookie: {
-      secure: isProd, // true en prod (HTTPS)
-      httpOnly: true,
-      // Subdominios (api.<dominio> y <dominio>) son "same-site".
-      // Lax funciona para la mayoría de casos. Si en algún flujo el navegador
-      // no envía la cookie, sube a 'none' y añade Secure.
-      sameSite: isProd ? "lax" : "lax",
-      domain: COOKIE_DOMAIN,
-      maxAge: 1000 * 60 * 60 * 24 // 1 día
-    }
-  })
-);
-
-/* Rate limits (ignora OPTIONS para no romper preflight) */
+/* Rate limits (skip preflight) */
 const baseLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
@@ -115,35 +51,13 @@ const baseLimiter = rateLimit({
 });
 app.use(baseLimiter);
 
-const tightLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  limit: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: req => req.method === "OPTIONS"
-});
-const contactLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  limit: 40,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: req => req.method === "OPTIONS"
-});
-const bookingLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  limit: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: req => req.method === "OPTIONS"
-});
+app.use("/api/auth/login", rateLimit({ windowMs: 10 * 60 * 1000, limit: 30, skip: r => r.method === "OPTIONS" }));
+app.use("/api/auth/register", rateLimit({ windowMs: 10 * 60 * 1000, limit: 30, skip: r => r.method === "OPTIONS" }));
+app.use("/api/auth/forgot-password", rateLimit({ windowMs: 10 * 60 * 1000, limit: 30, skip: r => r.method === "OPTIONS" }));
+app.use("/api/contact", rateLimit({ windowMs: 10 * 60 * 1000, limit: 40, skip: r => r.method === "OPTIONS" }));
+app.use("/api/booking", rateLimit({ windowMs: 10 * 60 * 1000, limit: 60, skip: r => r.method === "OPTIONS" }));
 
-app.use("/api/auth/login", tightLimiter);
-app.use("/api/auth/register", tightLimiter);
-app.use("/api/auth/forgot-password", tightLimiter);
-app.use("/api/contact", contactLimiter);
-app.use("/api/booking", bookingLimiter);
-
-/* Logger (pino + pino-http) */
+/* Logger */
 const transport = !isProd
   ? pino.transport({ target: "pino-pretty", options: { singleLine: true } })
   : undefined;
@@ -216,10 +130,11 @@ app.use("/api/availability", require("./src/routes/availability.routes"));
 app.use("/api/booking", require("./src/routes/booking.routes"));
 app.use("/api/contact", require("./src/routes/contact.routes"));
 
-/* 404 para /api desconocidas */
+/* 404 /api */
 app.use((req, res, next) => {
-  if (req.path.startsWith("/api/"))
+  if (req.path.startsWith("/api/")) {
     return res.status(404).json({ message: "Not Found" });
+  }
   next();
 });
 
