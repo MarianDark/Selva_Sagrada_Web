@@ -36,7 +36,7 @@ function EyeButton({ pressed, onToggle, labelShow, labelHide, positionClass }) {
       aria-pressed={pressed ? "true" : "false"}
       className={`absolute right-2 ${positionClass} inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500`}
     >
-      {/* pressed=true => el campo está visible, mostramos icono de OCULTAR */}
+      {/* pressed=true => campo visible, mostramos icono de OCULTAR */}
       <img
         src={pressed ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
         alt=""
@@ -147,7 +147,7 @@ export default function Register() {
           onToggle={() => setShowPassword((v) => !v)}
           labelShow="Mostrar contraseña"
           labelHide="Ocultar contraseña"
-          positionClass="top-1/2 -translate-y-1/2"   // centrado limpio
+          positionClass="top-1/2 -translate-y-1/2"   /* centrado */
         />
         {errors.password ? (
           <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
@@ -173,7 +173,7 @@ export default function Register() {
           onToggle={() => setShowConfirm((v) => !v)}
           labelShow="Mostrar confirmación de contraseña"
           labelHide="Ocultar confirmación de contraseña"
-          positionClass="top-[30%]"                  // un poco más arriba que el centro
+          positionClass="top-[15%]"                 /* más arriba que el centro */
         />
         {errors.confirm ? (
           <p className="text-sm text-red-600 mt-1">{errors.confirm.message}</p>
