@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
+import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
   const {
@@ -10,10 +10,10 @@ export default function Login() {
     handleSubmit,
     setValue,
     setFocus,
-    formState: { isSubmitting }
+    formState: { isSubmitting },
   } = useForm();
 
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const passEl = useRef(null);
 
@@ -22,29 +22,30 @@ export default function Login() {
   const [searchParams] = useSearchParams();
 
   const onSubmit = async (form) => {
-    setErrorMsg('');
+    setErrorMsg("");
     try {
-      await api.post('/auth/login', {
-        email: String(form.email || '').trim(),
-        password: form.password
+      await api.post("/auth/login", {
+        email: String(form.email || "").trim(),
+        password: form.password,
       });
 
       await loginSuccess();
 
-      setValue('password', '');
+      setValue("password", "");
       passEl.current?.blur?.();
 
-      const next = searchParams.get('next') || '/mi-cuenta';
+      const next = searchParams.get("next") || "/mi-cuenta";
       navigate(next, { replace: true });
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || 'Error iniciando sesión';
+      const msg =
+        e?.response?.data?.message || e?.message || "Error iniciando sesión";
       setErrorMsg(msg);
-      setValue('password', '');
-      setTimeout(() => setFocus('password'), 0);
+      setValue("password", "");
+      setTimeout(() => setFocus("password"), 0);
     }
   };
 
-  const passwordReg = register('password', { required: true });
+  const passwordReg = register("password", { required: true });
 
   return (
     <form
@@ -58,7 +59,7 @@ export default function Login() {
       <div className="space-y-2">
         <label className="block text-sm text-gray-700">Email</label>
         <input
-          {...register('email', { required: true })}
+          {...register("email", { required: true })}
           placeholder="tucorreo@dominio.com"
           type="email"
           inputMode="email"
@@ -76,21 +77,23 @@ export default function Login() {
               passwordReg.ref(el);
               passEl.current = el;
             }}
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             placeholder="********"
             autoComplete="current-password"
             className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
           />
           <button
             type="button"
-            onClick={() => setShowPassword(v => !v)}
-            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-            aria-pressed={showPassword ? 'true' : 'false'}
-            title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={
+              showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+            }
+            aria-pressed={showPassword ? "true" : "false"}
+            title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <img
-              src={showPassword ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+              src={showPassword ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
               alt=""
               className="w-5 h-5 object-contain"
             />
@@ -108,14 +111,19 @@ export default function Login() {
         type="submit"
         disabled={isSubmitting}
         className="w-full bg-emerald-600 text-white rounded-md py-2 font-medium hover:bg-emerald-700 disabled:opacity-60"
-        aria-busy={isSubmitting ? 'true' : 'false'}
+        aria-busy={isSubmitting ? "true" : "false"}
       >
-        {isSubmitting ? 'Entrando…' : 'Entrar'}
+        {isSubmitting ? "Entrando…" : "Entrar"}
       </button>
 
       <p className="text-[11px] text-center text-zinc-500 mt-2">
-        Icono de ocultar por{' '}
-        <a className="underline" href="https://www.flaticon.es/iconos-gratis/ojo-de-cerca" target="_blank" rel="noopener noreferrer">
+        Icono de ocultar por{" "}
+        <a
+          className="underline"
+          href="https://www.flaticon.es/iconos-gratis/ojo-de-cerca"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Rahul Kaklotar (Flaticon)
         </a>
       </p>

@@ -1,36 +1,36 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { api } from '@/lib/api'
-import { useAuth } from '@/context/AuthContext'
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 const passwordSchema = z
   .string()
-  .min(8, 'Mínimo 8 caracteres')
-  .regex(/[A-Z]/, 'Incluye mayúscula')
-  .regex(/[a-z]/, 'Incluye minúscula')
-  .regex(/[0-9]/, 'Incluye número')
-  .regex(/[^A-Za-z0-9]/, 'Incluye símbolo')
+  .min(8, "Mínimo 8 caracteres")
+  .regex(/[A-Z]/, "Incluye mayúscula")
+  .regex(/[a-z]/, "Incluye minúscula")
+  .regex(/[0-9]/, "Incluye número")
+  .regex(/[^A-Za-z0-9]/, "Incluye símbolo");
 
 const schema = z
   .object({
-    name: z.string().min(2, 'Ingresa tu nombre'),
-    email: z.string().email('Email inválido'),
+    name: z.string().min(2, "Ingresa tu nombre"),
+    email: z.string().email("Email inválido"),
     password: passwordSchema,
     confirm: z.string(),
   })
   .refine((data) => data.password === data.confirm, {
-    message: 'Las contraseñas no coinciden',
-    path: ['confirm'],
-  })
+    message: "Las contraseñas no coinciden",
+    path: ["confirm"],
+  });
 
 export default function Register() {
-  const [ok, setOk] = useState('')
-  const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
+  const [ok, setOk] = useState("");
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const {
     register,
@@ -40,49 +40,51 @@ export default function Register() {
     watch,
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', email: '', password: '', confirm: '' },
-    mode: 'onSubmit',
-  })
+    defaultValues: { name: "", email: "", password: "", confirm: "" },
+    mode: "onSubmit",
+  });
 
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const next = searchParams.get('next') || '/mi-cuenta'
-  const { loginSuccess } = useAuth()
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = searchParams.get("next") || "/mi-cuenta";
+  const { loginSuccess } = useAuth();
 
   const onSubmit = async (values) => {
-    setOk('')
-    setError('')
+    setOk("");
+    setError("");
     try {
-      await api.post('/auth/register', {
+      await api.post("/auth/register", {
         name: values.name,
         email: values.email,
         password: values.password,
-      })
+      });
 
       try {
-        await api.post('/auth/login', {
+        await api.post("/auth/login", {
           email: values.email,
           password: values.password,
-        })
-        await loginSuccess()
-        return navigate(next, { replace: true })
+        });
+        await loginSuccess();
+        return navigate(next, { replace: true });
       } catch (e) {
-        const status = e?.response?.status
+        const status = e?.response?.status;
         if (status === 401 || status === 403) {
-          setOk('Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión.')
+          setOk(
+            "Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión."
+          );
         } else {
-          setOk('Registro exitoso. Ahora puedes iniciar sesión.')
+          setOk("Registro exitoso. Ahora puedes iniciar sesión.");
         }
       }
 
-      reset({ name: '', email: '', password: '', confirm: '' })
+      reset({ name: "", email: "", password: "", confirm: "" });
     } catch (e) {
-      const msg = e?.response?.data?.message || 'No se pudo registrar.'
-      setError(msg)
+      const msg = e?.response?.data?.message || "No se pudo registrar.";
+      setError(msg);
     }
-  }
+  };
 
-  const password = watch('password')
+  const password = watch("password");
 
   return (
     <form
@@ -96,10 +98,12 @@ export default function Register() {
           type="text"
           placeholder="Nombre"
           className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
-          {...register('name')}
+          {...register("name")}
           autoComplete="name"
         />
-        {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
+        {errors.name && (
+          <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+        )}
       </div>
 
       <div>
@@ -107,30 +111,34 @@ export default function Register() {
           type="email"
           placeholder="Email"
           className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
-          {...register('email')}
+          {...register("email")}
           autoComplete="email"
         />
-        {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
+        {errors.email && (
+          <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+        )}
       </div>
 
       {/* Password */}
       <div className="relative">
         <input
-          type={showPassword ? 'text' : 'password'}
+          type={showPassword ? "text" : "password"}
           placeholder="Contraseña"
           className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
-          {...register('password')}
+          {...register("password")}
           autoComplete="new-password"
         />
         <button
           type="button"
           onClick={() => setShowPassword((v) => !v)}
-          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          aria-pressed={showPassword ? 'true' : 'false'}
+          aria-label={
+            showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+          }
+          aria-pressed={showPassword ? "true" : "false"}
           className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <img
-            src={showPassword ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+            src={showPassword ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
             alt=""
             className="h-5 w-5 object-contain"
           />
@@ -148,21 +156,25 @@ export default function Register() {
       {/* Confirm */}
       <div className="relative">
         <input
-          type={showConfirm ? 'text' : 'password'}
+          type={showConfirm ? "text" : "password"}
           placeholder="Confirmar contraseña"
           className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
-          {...register('confirm')}
+          {...register("confirm")}
           autoComplete="new-password"
         />
         <button
           type="button"
           onClick={() => setShowConfirm((v) => !v)}
-          aria-label={showConfirm ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
-          aria-pressed={showConfirm ? 'true' : 'false'}
+          aria-label={
+            showConfirm
+              ? "Ocultar confirmación de contraseña"
+              : "Mostrar confirmación de contraseña"
+          }
+          aria-pressed={showConfirm ? "true" : "false"}
           className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <img
-            src={showConfirm ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+            src={showConfirm ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
             alt=""
             className="h-5 w-5 object-contain"
           />
@@ -170,7 +182,9 @@ export default function Register() {
         {errors.confirm ? (
           <p className="text-sm text-red-600 mt-1">{errors.confirm.message}</p>
         ) : password ? (
-          <p className="text-xs text-zinc-500 mt-1">Debe coincidir con la contraseña.</p>
+          <p className="text-xs text-zinc-500 mt-1">
+            Debe coincidir con la contraseña.
+          </p>
         ) : null}
       </div>
 
@@ -182,13 +196,13 @@ export default function Register() {
         className="w-full bg-emerald-600 text-white py-2 rounded-md font-medium hover:bg-emerald-700 disabled:opacity-60"
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
+        {isSubmitting ? "Creando cuenta…" : "Crear cuenta"}
       </button>
 
       <p className="mt-4 text-sm text-zinc-600 text-center">
-        ¿Ya tienes cuenta?{' '}
+        ¿Ya tienes cuenta?{" "}
         <Link
-          to={`/login${next ? `?next=${encodeURIComponent(next)}` : ''}`}
+          to={`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
           className="text-emerald-700 font-medium hover:underline"
         >
           Inicia sesión
@@ -196,11 +210,16 @@ export default function Register() {
       </p>
 
       <p className="text-[11px] text-center text-zinc-500 mt-2">
-        Icono de ocultar por{' '}
-        <a className="underline" href="https://www.flaticon.es/iconos-gratis/ojo-de-cerca" target="_blank" rel="noopener noreferrer">
+        Icono de ocultar por{" "}
+        <a
+          className="underline"
+          href="https://www.flaticon.es/iconos-gratis/ojo-de-cerca"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Rahul Kaklotar (Flaticon)
         </a>
       </p>
     </form>
-  )
+  );
 }
