@@ -127,7 +127,7 @@ export default function Register() {
           onClick={() => setShowPassword((v) => !v)}
           aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           aria-pressed={showPassword ? 'true' : 'false'}
-          className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <img
             src={showPassword ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
@@ -159,14 +159,14 @@ export default function Register() {
           onClick={() => setShowConfirm((v) => !v)}
           aria-label={showConfirm ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
           aria-pressed={showConfirm ? 'true' : 'false'}
-          className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
-            <img
-              src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
-              alt=""
-              className="w-5 h-5 contain-button"
-            />
-          </button>
+          <img
+            src={showConfirm ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+            alt=""
+            className="h-5 w-5 object-contain"
+          />
+        </button>
         {errors.confirm ? (
           <p className="text-sm text-red-600 mt-1">{errors.confirm.message}</p>
         ) : password ? (
