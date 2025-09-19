@@ -36,7 +36,7 @@ function EyeButton({ pressed, onToggle, labelShow, labelHide }) {
       className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
     >
       <img
-        src={pressed ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
+        src={pressed ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
         alt=""
         className="w-5 h-5 object-contain"
       />
@@ -132,11 +132,11 @@ export default function Register() {
       </div>
 
       {/* Password */}
-      <div className="relative mb-5 overflow-hidden">
+      <div className="relative mb-5">
         <input
           type={showPassword ? "text" : "password"}
           placeholder="Contraseña"
-          className="w-full rounded-md border px-3 py-3 pr-12 focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
           {...register("password")}
           autoComplete="new-password"
         />
