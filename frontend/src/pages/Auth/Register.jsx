@@ -33,7 +33,7 @@ function EyeButton({ pressed, onToggle, labelShow, labelHide }) {
       onClick={onToggle}
       aria-label={pressed ? labelHide : labelShow}
       aria-pressed={pressed ? "true" : "false"}
-      className="absolute right-2 top-1/1 -translate-y-1/1 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      className="absolute right-2 top-2 -translate-y-2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
     >
       {/* pressed=true significa que el campo está visible, así que mostramos el icono de "ocultar" */}
       <img
