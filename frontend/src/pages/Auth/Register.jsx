@@ -69,9 +69,7 @@ export default function Register() {
       } catch (e) {
         const status = e?.response?.status
         if (status === 401 || status === 403) {
-          setOk(
-            'Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión.'
-          )
+          setOk('Registro exitoso. Revisa tu email para verificar la cuenta antes de iniciar sesión.')
         } else {
           setOk('Registro exitoso. Ahora puedes iniciar sesión.')
         }
@@ -85,16 +83,6 @@ export default function Register() {
   }
 
   const password = watch('password')
-
-  // SVG ojo cerrado con pestañas
-  const EyeClosed = (
-    <svg viewBox="0 0 24 24" className="h-5 w-5 text-gray-500" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M2.1 3.5 1 4.9l3.2 2.5A11.6 11.6 0 0 0 1 12c2.1 4.4 6.6 7.5 11 7.5 2.1 0 4.1-.6 5.8-1.7l3.2 2.5 1.1-1.4L2.1 3.5zM12 17c-2.8 0-5-2.2-5-5 0-.5.1-1 .3-1.4l6.1 4.8c-.4.3-.9.6-1.4.6zm9-5c-.7 1.6-1.9 3-3.3 4.1l-1.5-1.2a7.3 7.3 0 0 0 2.2-2.9 10.8 10.8 0 0 0-2.7-3.6l-1.5-1.2a7.2 7.2 0 0 0-1.6-.9l-1.4-1.1c.5-.1 1.1-.2 1.7-.2 4.4 0 8.9 3.1 11 7z"
-      />
-    </svg>
-  )
 
   return (
     <form
@@ -130,7 +118,7 @@ export default function Register() {
         <input
           type={showPassword ? 'text' : 'password'}
           placeholder="Contraseña"
-          className="w-full rounded-md border px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
           {...register('password')}
           autoComplete="new-password"
         />
@@ -139,13 +127,13 @@ export default function Register() {
           onClick={() => setShowPassword((v) => !v)}
           aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           aria-pressed={showPassword ? 'true' : 'false'}
-          className="absolute inset-y-0 right-3 flex items-center justify-center"
+          className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
-          {showPassword ? (
-            <img src="/ojo-turco.jpg" alt="Ojo abierto" className="h-5 w-5" />
-          ) : (
-            EyeClosed
-          )}
+          <img
+            src={showPassword ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+            alt=""
+            className="h-5 w-5 object-contain"
+          />
         </button>
         {errors.password ? (
           <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
@@ -162,7 +150,7 @@ export default function Register() {
         <input
           type={showConfirm ? 'text' : 'password'}
           placeholder="Confirmar contraseña"
-          className="w-full rounded-md border px-3 py-2 pr-10 focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
           {...register('confirm')}
           autoComplete="new-password"
         />
@@ -171,13 +159,13 @@ export default function Register() {
           onClick={() => setShowConfirm((v) => !v)}
           aria-label={showConfirm ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
           aria-pressed={showConfirm ? 'true' : 'false'}
-          className="absolute inset-y-0 right-3 flex items-center justify-center"
+          className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
-          {showConfirm ? (
-            <img src="/ojo-turco.jpg" alt="Ojo abierto" className="h-5 w-5" />
-          ) : (
-            EyeClosed
-          )}
+          <img
+            src={showConfirm ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+            alt=""
+            className="h-5 w-5 object-contain"
+          />
         </button>
         {errors.confirm ? (
           <p className="text-sm text-red-600 mt-1">{errors.confirm.message}</p>
@@ -205,6 +193,13 @@ export default function Register() {
         >
           Inicia sesión
         </Link>
+      </p>
+
+      <p className="text-[11px] text-center text-zinc-500 mt-2">
+        Icono de ocultar por{' '}
+        <a className="underline" href="https://www.flaticon.es/iconos-gratis/ojo-de-cerca" target="_blank" rel="noopener noreferrer">
+          Rahul Kaklotar (Flaticon)
+        </a>
       </p>
     </form>
   )

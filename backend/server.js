@@ -11,6 +11,9 @@ const connect = require("./src/config/db");
 const pino = require("pino");
 const pinoHttp = require("pino-http");
 
+// === CORS centralizado ===
+const { corsOptions, allowed } = require("./src/config/cors");
+
 const app = express();
 const isProd = process.env.NODE_ENV === "production";
 
@@ -58,54 +61,10 @@ app.use(
   })
 );
 
-/* ===== CORS con credenciales ===== */
-const RAW_ORIGINS = Array.from(
-  new Set(
-    [
-      process.env.CLIENT_URL,
-      ...(process.env.CLIENT_URLS ? process.env.CLIENT_URLS.split(",") : []),
-      "https://www.ssselvasagrada.com",
-      "https://ssselvasagrada.com",
-      !isProd && "http://localhost:5173",
-      process.env.ALLOW_RENDER_ORIGIN === "1" &&
-        "https://selva-sagrada-web.onrender.com",
-    ]
-      .filter(Boolean)
-      .map((s) => s.trim())
-  )
-);
-
-const ALLOWED_ORIGINS = RAW_ORIGINS.map((u) => {
-  try {
-    return new URL(u).origin;
-  } catch {
-    return null;
-  }
-}).filter(Boolean);
-
-const corsOptions = {
-  origin(origin, cb) {
-    if (!origin) return cb(null, true); // healthchecks/cURL
-    const ok = ALLOWED_ORIGINS.includes(origin);
-    return cb(ok ? null : new Error(`Not allowed by CORS: ${origin}`), ok);
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders(req, cb) {
-    const reqHeaders = req.header("Access-Control-Request-Headers");
-    cb(
-      null,
-      reqHeaders ||
-        "Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-Token"
-    );
-  },
-  exposedHeaders: ["Set-Cookie"],
-  optionsSuccessStatus: 204,
-};
-
+/* ===== CORS con credenciales (centralizado) ===== */
 app.use(cors(corsOptions));
-// Express 5 ya no acepta '*' como path; usa regex:
-app.options(/.*/, cors(corsOptions));
+// Preflight universal (OPTIONS)
+app.options("*", cors(corsOptions));
 // Evita caches raros en proxies intermedios
 app.use((req, res, next) => {
   res.header("Vary", "Origin, Access-Control-Request-Headers");
@@ -116,7 +75,10 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
-/* ===== Sesión con cookies seguras (para subdominios .ssselvasagrada.com) ===== */
+/* ===== Sesión con cookies seguras (para subdominios .ssselvasagrada.com) =====
+   Nota: tu autenticación principal va por JWT en cookie 'sid'. Esta sesión
+   la mantengo por si usas flash/csrf u otras rutas stateful. Ajusta SameSite
+   según necesites. Entre subdominios suele bastar 'lax'. */
 const COOKIE_DOMAIN = isProd ? ".ssselvasagrada.com" : undefined;
 const SESSION_SECRET =
   process.env.SESSION_SECRET || "cambia-ESTO-por-un-secreto-fuerte";
@@ -128,10 +90,10 @@ app.use(
     saveUninitialized: false,
     proxy: true, // respetar secure detrás de proxy
     cookie: {
-      secure: isProd,          // exige HTTPS en prod
+      secure: isProd, // exige HTTPS en prod
       httpOnly: true,
-      sameSite: isProd ? "none" : "lax",
-      domain: COOKIE_DOMAIN,   // comparte cookie entre api. y raíz en prod
+      sameSite: isProd ? "lax" : "lax",
+      domain: COOKIE_DOMAIN, // comparte cookie entre api. y raíz en prod
       maxAge: 1000 * 60 * 60 * 24, // 1 día
     },
   })
@@ -232,7 +194,7 @@ app.use(
   })
 );
 
-if (!isProd) logger.info({ allowed: ALLOWED_ORIGINS }, "CORS ALLOWED_ORIGINS");
+if (!isProd) logger.info({ allowed }, "CORS allowed origins");
 
 /* Rutas básicas */
 app.get("/", (_, res) => res.json({ name: "Selva Sagrada API", status: "ok" }));

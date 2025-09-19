@@ -42,6 +42,9 @@ export default function ResetPassword() {
     defaultValues: { password: '', confirm: '' },
   })
 
+  const [showPass, setShowPass] = useState(false)
+  const [showConf, setShowConf] = useState(false)
+
   const onSubmit = async ({ password }) => {
     try {
       setOk('')
@@ -76,13 +79,26 @@ export default function ResetPassword() {
       <h1 className="text-2xl font-bold text-emerald-700 mb-4">Restablecer contraseña</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
+        <div className="relative">
           <input
-            type="password"
+            type={showPass ? 'text' : 'password'}
             placeholder="Nueva contraseña"
-            className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
             {...register('password')}
           />
+          <button
+            type="button"
+            onClick={() => setShowPass(v => !v)}
+            aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            aria-pressed={showPass ? 'true' : 'false'}
+            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <img
+              src={showPass ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+              alt=""
+              className="h-5 w-5 object-contain"
+            />
+          </button>
           {errors.password ? (
             <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>
           ) : (
@@ -93,13 +109,26 @@ export default function ResetPassword() {
           )}
         </div>
 
-        <div>
+        <div className="relative">
           <input
-            type="password"
+            type={showConf ? 'text' : 'password'}
             placeholder="Confirmar contraseña"
-            className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-md border px-3 py-2 pr-12 focus:ring-2 focus:ring-emerald-500"
             {...register('confirm')}
           />
+          <button
+            type="button"
+            onClick={() => setShowConf(v => !v)}
+            aria-label={showConf ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+            aria-pressed={showConf ? 'true' : 'false'}
+            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <img
+              src={showConf ? '/icons/eye-closed-flaticon.svg' : '/ojo-turco.jpg'}
+              alt=""
+              className="h-5 w-5 object-contain"
+            />
+          </button>
           {errors.confirm && (
             <p className="text-xs text-red-600 mt-1">{errors.confirm.message}</p>
           )}
@@ -115,6 +144,13 @@ export default function ResetPassword() {
         >
           {isSubmitting ? 'Actualizando…' : 'Cambiar contraseña'}
         </button>
+
+        <p className="text-[11px] text-center text-zinc-500 mt-2">
+          Icono de ocultar por{' '}
+          <a className="underline" href="https://www.flaticon.es/iconos-gratis/ojo-de-cerca" target="_blank" rel="noopener noreferrer">
+            Rahul Kaklotar (Flaticon)
+          </a>
+        </p>
       </form>
     </div>
   )

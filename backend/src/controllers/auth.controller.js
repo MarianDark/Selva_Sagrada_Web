@@ -3,22 +3,22 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body } = require('express-validator');
 const crypto = require('crypto');
+
 const validate = require('../middleware/validate');
 const User = require('../models/User');
 const EmailToken = require('../models/EmailToken');
 const { transporter } = require('../config/mailer');
+const { getJwtSecret } = require('../config/auth');
 
 /* ========= Config ========= */
 const isProd = process.env.NODE_ENV === 'production';
-const COOKIE_NAME     = String(process.env.SESSION_COOKIE_NAME || 'sid').trim();
-const COOKIE_DOMAIN   = (process.env.COOKIE_DOMAIN && process.env.COOKIE_DOMAIN.trim()) || (isProd ? '.ssselvasagrada.com' : undefined);
-const COOKIE_MAX_AGE  = 7 * 24 * 60 * 60 * 1000; // 7d
-const CLIENT_URL      = process.env.CLIENT_URL || 'https://www.ssselvasagrada.com';
-const JWT_SECRET      = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  console.warn('[AUTH] JWT_SECRET está vacío. Solo para dev. Configura JWT_SECRET en prod.');
-}
+const COOKIE_NAME    = String(process.env.SESSION_COOKIE_NAME || 'sid').trim();
+const COOKIE_DOMAIN  =
+  (process.env.COOKIE_DOMAIN && process.env.COOKIE_DOMAIN.trim())
+  || (isProd ? '.ssselvasagrada.com' : undefined);
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 días
+const CLIENT_URL     = process.env.CLIENT_URL || 'https://www.ssselvasagrada.com';
+const JWT_SECRET     = getJwtSecret();
 
 /* ========= Cookie helpers ========= */
 function cookieOptions() {
@@ -146,7 +146,7 @@ exports.login = async (req, res, next) => {
 
     const token = jwt.sign(
       { id: u._id.toString(), role: u.role || 'user' },
-      JWT_SECRET || 'insecure-dev-secret',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
