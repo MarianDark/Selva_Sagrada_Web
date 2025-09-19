@@ -93,7 +93,7 @@ export default function Login() {
             className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <img
-              src={showPassword ? "/eye_closed_icon.png" : "/ojo-turco.jpg"}
+              src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
               alt=""
               className="w-5 h-5 object-contain"
             />
@@ -117,14 +117,14 @@ export default function Login() {
       </button>
 
       <p className="text-[11px] text-center text-zinc-500 mt-2">
-        Icono de ocultar por{" "}
+       {" "}
         <a
           className="underline"
-          href="https://www.flaticon.es/iconos-gratis/ojo-de-cerca"
+          href="https://ssselvasagrada.com/forgot-password"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Rahul Kaklotar (Flaticon)
+          ¿Olvidaste contraseña?
         </a>
       </p>
     </form>
