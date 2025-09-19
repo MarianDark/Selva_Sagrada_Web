@@ -138,9 +138,7 @@ export default function Register() {
           className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <img
-            src={
-              showPassword ? "/icons/eye-closed-flaticon.svg" : "/ojo-turco.jpg"
-            }
+            src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
             alt=""
             className="h-5 w-5 object-contain"
           />
@@ -176,9 +174,7 @@ export default function Register() {
           className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <img
-            src={
-              showConfirm ? "/icons/eye-closed-flaticon.svg" : "/ojo-turco.jpg"
-            }
+            src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
             alt=""
             className="h-5 w-5 object-contain"
           />
