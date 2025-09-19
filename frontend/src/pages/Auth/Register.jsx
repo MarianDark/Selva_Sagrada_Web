@@ -140,7 +140,7 @@ export default function Register() {
           <img
             src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
             alt=""
-            className="h-5 w-5 object-contain"
+            className="w-5 h-5 object-contain"
           />
         </button>
         {errors.password ? (
@@ -176,7 +176,7 @@ export default function Register() {
           <img
             src={showPassword ? "/ojo-turco.jpg" : "/eye_closed_icon.png"}
             alt=""
-            className="h-5 w-5 object-contain"
+            className="w-5 h-5 object-contain"
           />
         </button>
         {errors.confirm ? (
